@@ -946,8 +946,8 @@ a {
 
 .viewall{
     margin-top: 20px;
-    padding: 10px 20px;
-    font-size: 14px;
+    padding: 20px 40px;
+    font-size: 18px;
     background-color: var(--primary-black);
     color: var(--pure-white);
     border: none;
@@ -956,6 +956,13 @@ a {
     letter-spacing: 2px;
     transition: background-color 0.3s ease;
     border: 1px solid var(--primary-black);
+    left: 45%;
+    position: relative;
+}
+.viewall:hover{
+    color: var(--primary-black);
+    background-color: var(--pure-white);
+
 }
 
 /* --- Filter and Control Enhancements (Price, Stock, Sort) --- */
@@ -1088,4 +1095,270 @@ a {
     background-color: var(--dark-gray) !important;
     color: var(--pure-white);
     font-weight: 600;
+}
+/* --- Cart & Checkout Specific Styles for Luxury Look --- */
+
+.main-content {
+    padding: 3rem 0;
+}
+
+/* Page Layout (Cart & Checkout) */
+.checkout-layout, .cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px; /* Main content + Sidebar */
+    gap: 4rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .checkout-layout, .cart-layout {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+/* Section Headings */
+.section-title-small {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--ultra-light); /* Subtle separator */
+    padding-bottom: 0.5rem;
+    
+}
+
+/* Form Styling */
+.form-group {
+    
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--soft-black);
+}
+
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--light-gray);
+    background-color: var(--pure-white);
+    font-size: 1rem;
+    color: var(--soft-black);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+border-radius: 10px;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: var(--primary-black);
+    box-shadow: 0 0 0 1px var(--primary-black);
+}
+
+/* Order Summary / Cart Summary Box */
+.summary-box {
+    background-color: var(--off-white); /* Light background for contrast */
+    padding: 2.5rem;
+    border: 1px solid var(--ultra-light);
+    box-shadow: var(--shadow-sm);
+    position: sticky; /* Keep it visible on scroll */
+    top: 2rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--ultra-light);
+}
+
+.summary-item:last-of-type {
+    border-bottom: none;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 0;
+    margin-top: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-black);
+    border-top: 2px solid var(--primary-black);
+}
+
+/* Payment Method Styling (COD Fix) */
+.payment-methods {
+    margin-top: 2rem;
+}
+
+.payment-method {
+    border: 1px solid var(--light-gray);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+}
+
+.payment-method:hover {
+    border-color: var(--soft-black);
+}
+
+.payment-method input[type="radio"] {
+    display: none; /* Hide default radio button */
+}
+
+/* Custom radio button appearance */
+.payment-method .radio-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--soft-black);
+    border-radius: 50%;
+    margin-right: 1rem;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.payment-method input[type="radio"]:checked + .radio-indicator {
+    border-color: var(--primary-black);
+}
+
+.payment-method input[type="radio"]:checked + .radio-indicator::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-black);
+}
+
+.payment-method label {
+    margin: 0;
+    font-weight: 400;
+    font-size: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.payment-method-description {
+    font-size: 0.85rem;
+    color: var(--medium-gray);
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
+/* Cart Item Styling */
+.cart-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--ultra-light);
+}
+
+.cart-item-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.cart-item-details h4 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.cart-item-details p {
+    font-size: 0.9rem;
+    color: var(--medium-gray);
+    margin-bottom: 0.5rem;
+}
+
+.cart-item-quantity input {
+    width: 50px;
+    padding: 0.5rem;
+    border: 1px solid var(--light-gray);
+    text-align: center;
+}
+
+.cart-item-price {
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: right;
+}
+
+.btn-remove {
+    background: none;
+    border: none;
+    color: var(--medium-gray);
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+/* General Button Styling refinement */
+.btn-primary {
+    background-color: var(--primary-black);
+    color: var(--pure-white);
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: 2px solid var(--primary-black);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--soft-black);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+/* Empty Cart/Checkout styling */
+.empty-state {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: var(--medium-gray);
+    margin-bottom: 1.5rem;
+}
+
+/* Footer Fix for Cart/Checkout */
+.footer h4 {
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
 }

@@ -112,22 +112,18 @@ const products = [
 
 // --- Product Utility Functions ---
 
-// NEW FUNCTION: Handles redirection and filtering from the homepage
 function filterByCategory(category) {
-    // 1. Save the selected category to local storage
     localStorage.setItem('selectedCategory', category);
-    // 2. Redirect to the products page
     window.location.href = 'products.html';
 }
 
-// Helper to generate star rating string
 function generateStarRating(rating) {
     const fullStars = '★'.repeat(Math.floor(rating));
     const emptyStars = '☆'.repeat(5 - Math.ceil(rating));
     return `${fullStars}${emptyStars} (${rating.toFixed(1)})`;
 }
 
-// --- Cart Functions (No Change) ---
+// --- Cart Functions ---
 function getCart() {
     const cart = localStorage.getItem('cart');
     return cart ? JSON.parse(cart) : [];
@@ -151,7 +147,7 @@ function addToCart(productId, quantity = 1) {
     const cart = getCart();
     const product = products.find(p => p.id === productId);
     
-    if (!product) return;
+    if (!product || quantity < 1) return;
     
     const existingItem = cart.find(item => item.id === productId);
     
@@ -168,11 +164,12 @@ function addToCart(productId, quantity = 1) {
     }
     
     saveCart(cart);
-    showNotification(`${product.name} added to cart!`);
+    showNotification(`${quantity} x ${product.name} added to cart!`);
 }
 
 function showNotification(message) {
     const notification = document.createElement('div');
+    // Using inline styles for simplicity, but best practice is in CSS
     notification.style.cssText = `
         position: fixed;
         top: 100px;
@@ -192,10 +189,179 @@ function showNotification(message) {
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
+        // Simple fade out/slide out effect
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(20px)';
         setTimeout(() => notification.remove(), 300);
     }, 2000);
 }
+
+// --- UPDATED Cart Totals & Display Logic ---
+
+function calculateCartTotals() {
+    const cart = getCart();
+    let subtotal = 0;
+    cart.forEach(item => {
+        subtotal += item.price * item.quantity;
+    });
+
+    // Simple shipping/tax structure
+    const shipping = subtotal > 1000 ? 0.00 : 50.00; // Free shipping over $1000
+    const taxRate = 0.05; // 5% tax
+    const tax = subtotal * taxRate;
+    const total = subtotal + shipping + tax;
+    
+    return { subtotal, shipping, tax, total };
+}
+
+function displayCart() {
+    const cart = getCart();
+    
+    // Target the new, correct element IDs from the updated cart.html structure
+    const cartItemsList = document.getElementById('cartItemsList');
+    const emptyCartMessage = document.getElementById('emptyCartMessage');
+    const cartSummaryColumn = document.querySelector('.cart-summary-column'); 
+
+    if (!cartItemsList || !emptyCartMessage || !cartSummaryColumn) return;
+
+    const totals = calculateCartTotals();
+
+    if (cart.length === 0) {
+        // Show empty state, hide everything else
+        emptyCartMessage.style.display = 'block';
+        cartItemsList.style.display = 'none';
+        cartSummaryColumn.style.display = 'none';
+        return;
+    }
+    
+    // Show cart content
+    emptyCartMessage.style.display = 'none';
+    cartItemsList.style.display = 'block';
+    cartSummaryColumn.style.display = 'block';
+
+    // Inject cart items HTML (The buttons now rely on Event Delegation, not individual listeners)
+    cartItemsList.innerHTML = cart.map(item => `
+        <div class="cart-item" data-product-id="${item.id}">
+            <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+            <div class="cart-item-details">
+                <h4 class="cart-item-name">${item.name}</h4>
+                <p class="cart-item-price">$${item.price.toFixed(2)}</p>
+                <div class="quantity-controls">
+                    <button class="qty-btn qty-minus " data-id="${item.id}" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">-</button>
+                    <input type="number" value="${item.quantity}" min="1" readonly class="quantity-input" data-id="${item.id}" style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 5px 0;">
+                    <button class="qty-btn qty-plus " data-id="${item.id}"style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">+</button>
+                </div>
+            </div>
+            <div class="cart-item-actions">
+                <p class="cart-item-subtotal">$${(item.price * item.quantity).toFixed(2)}</p>
+                <button class="remove-item-btn  btn" data-id="${item.id}">Remove</button>
+            </div>
+        </div>
+    `).join('');
+
+    // Update totals box (Now includes Shipping and Tax)
+    document.getElementById('cartSubtotal').textContent = `$${totals.subtotal.toFixed(2)}`;
+    document.getElementById('cartShipping').textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
+    document.getElementById('cartTax').textContent = `$${totals.tax.toFixed(2)}`;
+    document.getElementById('cartTotal').textContent = `$${totals.total.toFixed(2)}`;
+    
+    // NOTE: Removed the document.querySelectorAll for listeners here, 
+    // as they are now handled by event delegation in initCartListeners().
+}
+
+/**
+ * Attaches a single click listener to the cart container to handle
+ * quantity changes and removals using event delegation.
+ */
+function initCartListeners() {
+    const cartItemsList = document.getElementById('cartItemsList');
+    if (!cartItemsList) return;
+
+    cartItemsList.addEventListener('click', (e) => {
+        const target = e.target;
+        const productId = parseInt(target.dataset.id);
+
+        // Ensure a button with a valid product ID was clicked
+        if (isNaN(productId)) return; 
+
+        if (target.classList.contains('qty-plus')) {
+            updateQuantity(productId, 1);
+        } else if (target.classList.contains('qty-minus')) {
+            updateQuantity(productId, -1);
+        } else if (target.classList.contains('remove-item-btn')) {
+            removeFromCart(productId);
+        }
+    });
+}
+
+
+function updateQuantity(productId, change) {
+    const cart = getCart();
+    const item = cart.find(i => i.id === productId);
+
+    if (item) {
+        item.quantity += change;
+        if (item.quantity < 1) {
+            item.quantity = 1;
+        }
+    }
+    saveCart(cart);
+    displayCart(); // Re-render the cart with the new quantity/total
+}
+
+function removeFromCart(productId) {
+    let cart = getCart();
+    cart = cart.filter(item => item.id !== productId);
+    saveCart(cart);
+    displayCart(); // Re-render the cart after removal
+    showNotification("Item removed from cart.");
+}
+
+function displayCheckoutSummary() {
+    const cart = getCart();
+    
+    // Target the new, correct element IDs from the updated checkout.html structure
+    const itemsListContainer = document.getElementById('checkoutItemsList');
+    const totals = calculateCartTotals();
+    
+    // Check for essential elements
+    if (!itemsListContainer) return;
+    
+    // Get all summary total elements (required for empty cart reset)
+    const checkoutSubtotalEl = document.getElementById('checkoutSubtotal');
+    const checkoutShippingEl = document.getElementById('checkoutShipping');
+    const checkoutTaxEl = document.getElementById('checkoutTax');
+    const checkoutTotalEl = document.getElementById('checkoutTotal');
+    
+    // Exit if any critical element is missing (e.g., checkoutTotalEl)
+    if (!checkoutTotalEl) return;
+    
+    if (cart.length === 0) {
+        itemsListContainer.innerHTML = '<p style="padding: 1rem; text-align: center;">Your cart is empty. Please add items to proceed.</p>';
+        
+        // Reset totals if cart is empty
+        checkoutSubtotalEl.textContent = '$0.00';
+        checkoutShippingEl.textContent = '$0.00';
+        checkoutTaxEl.textContent = '$0.00';
+        checkoutTotalEl.textContent = '$0.00';
+        return;
+    }
+    
+    // 1. Display items
+    itemsListContainer.innerHTML = cart.map(item => `
+        <div class="summary-item">
+            <span class="item-name">${item.name} x${item.quantity}</span>
+            <span class="item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+    `).join('');
+
+    // 2. Update totals box
+    checkoutSubtotalEl.textContent = `$${totals.subtotal.toFixed(2)}`;
+    checkoutShippingEl.textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
+    checkoutTaxEl.textContent = `$${totals.tax.toFixed(2)}`;
+    checkoutTotalEl.textContent = `$${totals.total.toFixed(2)}`;
+}
+
 
 // --- Navigation Functions (No Change) ---
 function initNavigation() {
@@ -223,7 +389,7 @@ function initNavigation() {
     }
 }
 
-// --- Display Functions (Corrected to isolate homepage/product page styling) ---
+// --- Display Products Logic (No Change) ---
 function displayProducts(containerSelector, productList, limit = null) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
@@ -340,7 +506,7 @@ function applyFiltersAndSort() {
     displayProducts('#allProducts', filteredProducts);
 }
 
-// --- Product Detail Page Logic (No Change) ---
+// --- Product Detail Page Logic (No Change to core logic, only updates on elements) ---
 let currentImageIndex = 0;
 let currentProductImages = [];
 const lightbox = document.getElementById('lightbox');
@@ -378,6 +544,15 @@ function displayProductDetail() {
                     <span class="variant-option selected">Gold</span>
                 </div>
             </div>
+            
+            <div class="quantity-selector" style="margin-bottom: 1.5rem;">
+                <label>Quantity:</label>
+                <div class="quantity-controls" style="display: flex; align-items: center; gap: 5px;">
+                    <button class="qty-btn" id="qtyMinus" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">-</button>
+                    <input type="number" id="quantityInput" value="1" min="1" readonly style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 5px 0;"> 
+                    <button class="qty-btn" id="qtyPlus" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">+</button>
+                </div>
+            </div>
 
             <button class="add-to-cart-btn" id="addToCartBtn">Add to Cart</button>
             
@@ -387,9 +562,36 @@ function displayProductDetail() {
             </div>
         `;
 
-        document.getElementById('addToCartBtn').addEventListener('click', () => {
-            addToCart(product.id, 1);
-        });
+        // Get elements after they have been injected
+        const quantityInput = document.getElementById('quantityInput');
+        const qtyMinus = document.getElementById('qtyMinus');
+        const qtyPlus = document.getElementById('qtyPlus');
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        
+        // Add Quantity Control Listeners
+        if (qtyPlus) {
+            qtyPlus.addEventListener('click', () => {
+                let currentQty = parseInt(quantityInput.value);
+                quantityInput.value = currentQty + 1;
+            });
+        }
+        
+        if (qtyMinus) {
+            qtyMinus.addEventListener('click', () => {
+                let currentQty = parseInt(quantityInput.value);
+                if (currentQty > 1) { 
+                    quantityInput.value = currentQty - 1;
+                }
+            });
+        }
+        
+        // Add to Cart Listener (NOW reading quantityInput)
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', () => {
+                const quantity = parseInt(quantityInput.value);
+                addToCart(product.id, quantity);
+            });
+        }
     }
 
     // Product Gallery
@@ -429,7 +631,9 @@ function displayProductDetail() {
     // Similar Products
     const similarContainer = document.getElementById('similarProductsScroll');
     if(similarContainer) {
+        // Filter to ensure we don't show the current product as similar
         const similar = products.filter(p => p.category === product.category && p.id !== product.id);
+        // Fallback to showing generic products if no similar ones are found
         displayProducts('#similarProductsScroll', similar.length ? similar : products.slice(0,4));
     }
 }
@@ -481,14 +685,14 @@ function changeLightboxImage(direction) {
 }
 
 
-// --- MASTER INITIALIZATION (FIXED STRUCTURE) ---
+// --- MASTER INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     initNavigation();
     
     const path = window.location.pathname;
 
-    // 1. PRODUCTS LIST PAGE (Products.html - Contains filtering/sorting)
+    // 1. PRODUCTS LIST PAGE (Products.html)
     if (path.includes('products.html')) {
         const filterButtons = document.querySelectorAll('.filter-item[data-filter-type="category"]'); 
         const priceRange = document.getElementById('priceRange');
@@ -519,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (selectedCategory && selectedCategory !== 'all') {
             updateActiveFilter(selectedCategory);
-            // Crucial: remove it after reading so that subsequent visits to products.html aren't stuck on one category
             localStorage.removeItem('selectedCategory'); 
         } else {
             updateActiveFilter('all');
@@ -529,8 +732,6 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFiltersAndSort(); 
 
         // --- Event Listeners ---
-
-        // Category Filter Clicks
         filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 updateActiveFilter(btn.dataset.filterValue);
@@ -538,35 +739,107 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Price Range Input
         if (priceRange) {
             priceRange.addEventListener('input', () => {
                 if (maxPriceValueEl) {
                     maxPriceValueEl.textContent = `${parseFloat(priceRange.value).toFixed(2)}`;
                 }
-                // Delay applying the filter slightly for better performance while dragging the slider
                 applyFiltersAndSort(); 
             });
         }
         
-        // In Stock Checkbox
         if (inStockFilter) {
             inStockFilter.addEventListener('change', applyFiltersAndSort);
         }
         
-        // Sort Dropdown
         if (sortSelect) {
             sortSelect.addEventListener('change', applyFiltersAndSort);
         }
     }
     
-    // 2. PRODUCT DETAILS PAGE (product.html - Does NOT run on products.html)
+    // 2. PRODUCT DETAILS PAGE (product.html)
     else if (path.includes('product.html')) {
         displayProductDetail();
         initLightbox();
     }
     
-    // 3. HOME PAGE (index.html)
+    // 3. CART PAGE (cart.html) - NOW CALLS initCartListeners()
+    else if (path.includes('cart.html')) {
+        displayCart();
+        initCartListeners(); // Attach event delegation listener once
+    }
+    
+    // 4. CHECKOUT PAGE (checkout.html)
+    else if (path.includes('checkout.html')) {
+        displayCheckoutSummary();
+        
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Form is VALID: Process order
+                if (checkoutForm.checkValidity()) {
+                    
+                    // Generate a unique, simulated Order ID
+                    const orderId = `VESTARA-${Math.floor(Math.random() * 100000)}`;
+                    
+                    // Store order details in localStorage to display on thank you page
+                    localStorage.setItem('lastOrderId', orderId);
+                    
+                    // Clear the cart
+                    localStorage.removeItem('cart');
+                    updateCartCount(); 
+                    
+                    // Redirect to the dedicated Thank You page
+                    window.location.href = 'thankyou.html';
+                    
+                } else {
+                    // Form is NOT valid: Trigger native browser error messages
+                    checkoutForm.reportValidity();
+                }
+            });
+        }
+    }
+    
+    // 5. THANK YOU PAGE (thankyou.html) - NEW LOGIC
+    else if (path.includes('thankyou.html')) {
+        const orderId = localStorage.getItem('lastOrderId');
+        // This targets the main content div in thankyou.html
+        const thankYouContent = document.getElementById('thankYouContent'); 
+        
+        if (thankYouContent) {
+            if (orderId) {
+                thankYouContent.innerHTML = `
+                    <div class="thank-you-message">
+                        <h2 class="section-title">Order Placed Successfully!</h2>
+                        <p>Thank you for your purchase. Your order number is **${orderId}**.</p>
+                        <p>A confirmation email has been sent to your provided address.</p>
+                        <div style="margin-top: 2rem;">
+                            <a href="products.html" class="btn btn-secondary" style="margin-right: 1rem;">Continue Shopping</a>
+                            <a href="index.html" class="btn btn-primary">Return to Homepage</a>
+                        </div>
+                    </div>
+                `;
+                // Clear the order ID after displaying it so it doesn't show again
+                localStorage.removeItem('lastOrderId'); 
+            } else {
+                 // Handle direct access without a recent order
+                 thankYouContent.innerHTML = `
+                    <div class="thank-you-message">
+                        <h2 class="section-title">Thank You!</h2>
+                        <p>We appreciate your business. If you just completed an order, please check your email for confirmation.</p>
+                        <div style="margin-top: 2rem;">
+                            <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    
+    // 6. HOME PAGE (index.html) - Check last for robustness
     else if (path.includes('index.html') || path.endsWith('/')) {
         displayProducts('#featuredProducts', products, 8);
     }

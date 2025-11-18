@@ -15,7 +15,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -31,132 +31,126 @@
         <div class="nav-menu">
             <button class="nav-close" id="navClose">&times;</button>
             <a href="index.html">Home</a>
-            <a href="products.html">Products</a>
-            <a href="reviews.html">Reviews</a>
-            <a href="contact.html">Contact</a>
-            <a href="warranty.html">Warranty</a>
+            <a href="products.html">Shop All</a>
             <a href="policies.html">Policies</a>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart">Cart (<span id="navCartCount">0</span>)</a>
         </div>
     </nav>
 
     <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1>Checkout</h1>
-            </div>
+    <div class="container">
+        <h1 class="section-title">Checkout</h1>
 
-            <div class="checkout-container">
-                <div class="checkout-form-section">
+        <div id="checkoutContent"> 
+            
+            <div class="checkout-layout">
+                <div class="checkout-form-column">
                     <form id="checkoutForm">
-                        <h2>Billing Information</h2>
-                        
-                        <div class="form-group">
-                            <label for="fullName">Full Name *</label>
-                            <input type="text" id="fullName" name="fullName" required>
-                        </div>
+                        <section class="shipping-info">
+                            <h2 class="section-title-small">Shipping Information</h2>
 
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="phone">Phone Number *</label>
-                            <input type="tel" id="phone" name="phone" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="address">Street Address *</label>
-                            <input type="text" id="address" name="address" required>
-                        </div>
-
-                        <div class="form-row">
                             <div class="form-group">
-                                <label for="city">City *</label>
-                                <input type="text" id="city" name="city" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="state">State *</label>
-                                <input type="text" id="state" name="state" required>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="zip">ZIP Code *</label>
-                                <input type="text" id="zip" name="zip" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="country">Country *</label>
-                                <input type="text" id="country" name="country" value="United States" required>
-                            </div>
-                        </div>
-
-                        <h2>Payment Method</h2>
-                        
-                        <div class="payment-methods">
-                            <label class="payment-option">
-                                <input type="radio" name="payment" value="card" checked>
-                                <span>Credit/Debit Card</span>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="payment" value="cod">
-                                <span>Cash on Delivery</span>
-                            </label>
-                        </div>
-
-                        <div id="cardFields">
-                            <div class="form-group">
-                                <label for="cardNumber">Card Number *</label>
-                                <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456">
+                                <label for="fullName">Full Name</label>
+                                <input type="text" id="fullName" name="fullName" placeholder="John Doe" required>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="expiry">Expiry Date *</label>
-                                    <input type="text" id="expiry" name="expiry" placeholder="MM/YY">
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="john.doe@example.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address">Street Address</label>
+                                <input type="text" id="address" name="address" placeholder="123 Luxury Lane" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city" placeholder="Karachi" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="zipCode">Zip Code</label>
+                                <input type="text" id="zipCode" name="zipCode" placeholder="10001" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="state">State</label>
+                                <input type="text" id="state" name="state" placeholder="Sindh" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <input  type="text" id="country" name="country" placeholder="Pakistan" required>
+                            </div>
+                        </section>
+
+                        <section class="payment-selection">
+                            <h2 class="section-title-small">Payment Method</h2>
+                            <div class="payment-methods">
+
+                                <div class="payment-method">
+                                    <input type="radio" id="paymentCod" name="paymentMethod" value="cod" checked>
+                                    <span class="radio-indicator"></span>
+                                    <label for="paymentCod">
+                                        Cash on Delivery (COD)
+                                        <span class="payment-method-description">Pay in cash when your order is delivered.</span>
+                                    </label>
                                 </div>
-                                <div class="form-group">
-                                    <label for="cvv">CVV *</label>
-                                    <input type="text" id="cvv" name="cvv" placeholder="123">
-                                </div>
-                            </div>
-                        </div>
 
-                        <button type="submit" class="btn btn-primary btn-block">Place Order</button>
+                                <div class="payment-method disabled-option" style="opacity: 0.5; pointer-events: none;">
+                                    <input type="radio" id="paymentCard" name="paymentMethod" value="card" disabled>
+                                    <span class="radio-indicator"></span>
+                                    <label for="paymentCard">
+                                        Credit Card (Temporarily Unavailable)
+                                        <span class="payment-method-description">Visa, MasterCard, Amex</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </section>
+
+                        <button type="submit" class="btn btn-primary btn-block">Confirm Order & Pay</button>
                     </form>
                 </div>
 
-                <div class="checkout-summary">
-                    <h2>Order Summary</h2>
-                    <div id="checkoutItems" class="checkout-items"></div>
-                    
-                    <div class="checkout-totals">
-                        <div class="summary-row">
-                            <span>Subtotal:</span>
+                <div class="order-summary-column">
+                    <div class="summary-box">
+                        <h2 class="section-title-small">Order Summary</h2>
+                        <div id="checkoutItemsList"> 
+                            </div>
+
+                        <div class="summary-item">
+                            <span>Subtotal</span>
                             <span id="checkoutSubtotal">$0.00</span>
                         </div>
-                        <div class="summary-row">
-                            <span>Shipping:</span>
-                            <span id="checkoutShipping">$0.00</span>
+                        <div class="summary-item">
+                            <span>Shipping</span>
+                            <span id="checkoutShipping">FREE</span>
                         </div>
-                        <div class="summary-row summary-total">
+                        <div class="summary-item">
+                            <span>Tax (5%)</span>
+                            <span id="checkoutTax">$0.00</span> 
+                        </div>
+                        <div class="summary-total">
                             <span>Total:</span>
                             <span id="checkoutTotal">$0.00</span>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
-    </main>
+        </div>
+</main>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -172,7 +166,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>

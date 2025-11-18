@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - Vestara</title>
+    <title id="pageTitle">Product Details - Vestara</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,61 +31,39 @@
         <div class="nav-menu">
             <button class="nav-close" id="navClose">&times;</button>
             <a href="index.html">Home</a>
-            <a href="products.html">Products</a>
-            <a href="reviews.html">Reviews</a>
-            <a href="contact.html">Contact</a>
-            <a href="warranty.html">Warranty</a>
+            <a href="products.html">Shop All</a>
             <a href="policies.html">Policies</a>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart">Cart (<span id="navCartCount">0</span>)</a>
         </div>
     </nav>
 
-    <main class="product-detail-page">
+    <main class="main">
         <div class="container">
-            <a href="products.html" class="back-link">&larr; Back to Products</a>
-            
-            <div class="product-detail" id="productDetail">
-                <div class="product-gallery">
-                    <div class="main-image-container" id="mainImageContainer">
-                        <img id="mainImage" src="" alt="" class="main-image">
-                    </div>
-                    <div class="thumbnail-container" id="thumbnailContainer"></div>
-                </div>
-
-                <div class="product-detail-info">
-                    <h1 id="productName"></h1>
-                    <p class="product-price" id="productPrice"></p>
-                    <p class="product-description" id="productShortDescription"></p>
+            <section class="product-detail-section">
+                <div class="product-detail" id="productDetail">
                     
-                    <div class="quantity-selector">
-                        <label>Quantity:</label>
-                        <div class="quantity-controls">
-                            <button class="qty-btn" id="qtyMinus">-</button>
-                            <input type="number" id="quantity" value="1" min="1" readonly>
-                            <button class="qty-btn" id="qtyPlus">+</button>
+                    <div class="product-gallery" id="productGallery"> 
                         </div>
-                    </div>
-                    
-                    <button class="btn btn-primary btn-block" id="addToCartBtn">Add to Cart</button>
-                    
-                    <div class="product-long-description">
-                        <h3>Product Details</h3>
-                        <p id="productLongDescription"></p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="similar-products">
-                <h3>You May Also Like</h3>
-                <div class="product-scroll" id="similarProductsScroll"></div>
-            </div>
+                    <div class="product-detail-info" id="productInfo">
+                        </div>
+                </div>
+            </section>
+
+            <section class="similar-products-section">
+                <h2 class="section-title">You Might Also Love</h2>
+                <div class="product-scroll-container">
+                    <div class="product-scroll-grid" id="similarProductsScroll"> 
+                        </div>
+                </div>
+            </section>
         </div>
     </main>
 
-    <!-- Lightbox -->
-    <div class="lightbox" id="lightbox">
+    <div id="lightbox" class="lightbox">
+        <span class="lightbox-close">&times;</span>
         <div class="lightbox-content">
-            <button class="lightbox-close" id="lightboxClose">&times;</button>
             <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&lsaquo;</button>
             <img id="lightboxImage" src="" alt="">
             <button class="lightbox-nav lightbox-next" id="lightboxNext">&rsaquo;</button>

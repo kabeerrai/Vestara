@@ -15,7 +15,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -31,54 +31,68 @@
         <div class="nav-menu">
             <button class="nav-close" id="navClose">&times;</button>
             <a href="index.html">Home</a>
-            <a href="products.html">Products</a>
-            <a href="reviews.html">Reviews</a>
-            <a href="contact.html">Contact</a>
-            <a href="warranty.html">Warranty</a>
+            <a href="products.html">Shop All</a>
             <a href="policies.html">Policies</a>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart">Cart (<span id="navCartCount">0</span>)</a>
         </div>
     </nav>
 
     <main class="main-content">
-        <div class="container">
-            <div class="page-header">
-                <h1>Shopping Cart</h1>
-            </div>
-
-            <div id="cartContent">
-                <div id="emptyCart" class="empty-cart">
-                    <p>Your cart is empty</p>
-                    <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+    <div class="container">
+        <h1 class="section-title">Your Cart</h1>
+        
+        <div class="cart-layout">
+            
+            <div class="cart-items-column">
+                
+                <div id="emptyCartMessage" class="empty-state" style="display: none;">
+                    <p>Your shopping cart is currently empty.</p>
+                    <a href="products.html" class="btn btn-primary">Start Shopping</a>
                 </div>
 
-                <div id="cartItems" class="cart-items"></div>
+                <div id="cartItemsList" class="cart-items-list">
+                    <p style="text-align: center;">Loading cart items...</p>
+                </div>
+            </div>
 
-                <div id="cartSummary" class="cart-summary">
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
+            <div class="cart-summary-column">
+                <div class="summary-box">
+                    <h2 class="section-title-small">Order Summary</h2>
+
+                    <div class="summary-item">
+                        <span>Subtotal</span>
                         <span id="cartSubtotal">$0.00</span>
                     </div>
-                    <div class="summary-row">
-                        <span>Shipping:</span>
-                        <span id="cartShipping">$0.00</span>
+                    
+                    <div class="summary-item">
+                        <span>Shipping Estimate</span>
+                        <span id="cartShipping">Calculated at Checkout</span>
                     </div>
-                    <div class="summary-row summary-total">
-                        <span>Total:</span>
+                    
+                    <div class="summary-item">
+                        <span>Estimated Tax (5%)</span>
+                        <span id="cartTax">$0.00</span>
+                    </div>
+                    
+                    <div class="summary-total">
+                        <span>Estimated Total:</span>
                         <span id="cartTotal">$0.00</span>
                     </div>
+
                     <a href="checkout.html" class="btn btn-primary btn-block">Proceed to Checkout</a>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</main>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -94,7 +108,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>

@@ -15,7 +15,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -31,80 +31,52 @@
         <div class="nav-menu">
             <button class="nav-close" id="navClose">&times;</button>
             <a href="index.html">Home</a>
-            <a href="products.html">Products</a>
-            <a href="reviews.html">Reviews</a>
-            <a href="contact.html">Contact</a>
-            <a href="warranty.html">Warranty</a>
+            <a href="products.html">Shop All</a>
             <a href="policies.html">Policies</a>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart">Cart (<span id="navCartCount">0</span>)</a>
         </div>
     </nav>
 
     <main class="main-content">
-        <div class="container">
+        <div class="container contact-page">
             <div class="page-header">
-                <h1>Contact Us</h1>
-                <p>We'd love to hear from you</p>
+                <h1>Get in Touch</h1>
+                <p>We'd love to hear from you! Please reach out with any questions, comments, or styling inquiries.</p>
             </div>
 
-            <div class="contact-container">
-                <div class="contact-info">
-                    <h2>Get in Touch</h2>
-                    <p>Have a question or need assistance? Our customer service team is here to help.</p>
-                    
-                    <div class="contact-method">
-                        <h3>📧 Email</h3>
-                        <p>hello@luxeliving.com</p>
-                        <p class="text-muted">We respond within 24 hours</p>
-                    </div>
-
-                    <div class="contact-method">
-                        <h3>📞 Phone</h3>
-                        <p>(555) 123-4567</p>
-                        <p class="text-muted">Mon-Fri: 9am-6pm EST</p>
-                    </div>
-
-                    <div class="contact-method">
-                        <h3>📍 Address</h3>
-                        <p>123 Design Avenue<br>
-                        New York, NY 10001<br>
-                        United States</p>
-                    </div>
-
-                    <div class="contact-method">
-                        <h3>🕒 Business Hours</h3>
-                        <p>Monday - Friday: 9:00 AM - 6:00 PM EST<br>
-                        Saturday: 10:00 AM - 4:00 PM EST<br>
-                        Sunday: Closed</p>
-                    </div>
+            <div class="contact-grid">
+                <div class="contact-info-box">
+                    <h2>Contact Information</h2>
+                    <p><strong>Email:</strong> <a href="mailto:hello@vestara.com">hello@vestara.com</a></p>
+                    <p><strong>Phone:</strong> (555) 123-4567</p>
+                    <p><strong>Office Hours:</strong> Mon - Fri, 9:00 AM - 5:00 PM EST</p>
+                    <p style="margin-top: 1.5rem;"><strong>Vestara Headquarters:</strong></p>
+                    <p>123 Jewel Lane,<br>New York, NY 10001</p>
                 </div>
-
-                <div class="contact-form-section">
+                
+                <div class="contact-form-box">
                     <h2>Send Us a Message</h2>
-                    <form id="contactForm">
+                    <form id="contactForm" class="contact-form" onsubmit="document.getElementById('contactForm').style.display='none'; document.getElementById('contactSuccess').style.display='block'; return false;">
                         <div class="form-group">
-                            <label for="contactName">Name *</label>
-                            <input type="text" id="contactName" name="contactName" required>
+                            <label for="contactName">Name</label>
+                            <input type="text" id="contactName" required>
                         </div>
-
                         <div class="form-group">
-                            <label for="contactEmail">Email *</label>
-                            <input type="email" id="contactEmail" name="contactEmail" required>
+                            <label for="contactEmail">Email</label>
+                            <input type="email" id="contactEmail" required>
                         </div>
-
                         <div class="form-group">
-                            <label for="contactSubject">Subject *</label>
-                            <input type="text" id="contactSubject" name="contactSubject" required>
+                            <label for="contactSubject">Subject</label>
+                            <input type="text" id="contactSubject">
                         </div>
-
                         <div class="form-group">
-                            <label for="contactMessage">Message *</label>
-                            <textarea id="contactMessage" name="contactMessage" rows="6" required></textarea>
+                            <label for="contactMessage">Message</label>
+                            <textarea id="contactMessage" rows="5" required></textarea>
                         </div>
-
-                        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
                     </form>
-                    <div id="contactSuccess" class="success-message" style="display: none;">
+                    <div id="contactSuccess" class="success-message" style="display: none; padding: 2rem; border: 1px solid var(--medium-gray); text-align: center;">
                         Thank you for your message! We'll get back to you soon.
                     </div>
                 </div>
@@ -117,7 +89,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -133,7 +105,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>
