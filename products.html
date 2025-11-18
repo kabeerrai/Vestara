@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products - Vestara</title>
+    <title>Vestara - Collection</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,11 +11,9 @@
         <div class="container">
             <div class="header-content">
                 <button class="menu-toggle" id="menuToggle">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    <span></span><span></span><span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -34,20 +32,66 @@
             <a href="products.html">Products</a>
             <a href="reviews.html">Reviews</a>
             <a href="contact.html">Contact</a>
-            <a href="warranty.html">Warranty</a>
-            <a href="policies.html">Policies</a>
-            <a href="privacy.html">Privacy Policy</a>
+            <a href="cart.html">Cart (<span id="navCartCount">0</span>)</a>
         </div>
     </nav>
 
-    <main class="main-content">
+    <main class="main-content product-page-layout">
         <div class="container">
-            <div class="page-header">
-                <h1>Our Products</h1>
-                <p>Discover our curated collection of premium home decor</p>
+            
+            <div class="shop-layout">
+               <aside class="shop-sidebar">
+    <div class="filter-group">
+        <div class="filter-title">Price <span class="toggle-icon"></span></div>
+        <div class="filter-content">
+            <div class="price-range">
+                <input type="range" id="priceRange" min="0" max="1600" value="1600" step="10"> 
+                <p style="font-size: 0.8rem; color: #333;">Max Price: $<span id="maxPriceValue">1600.00</span></p>
             </div>
+        </div>
+    </div>
+    
+    <div class="filter-group">
+        <div class="filter-title">Product Type <span class="toggle-icon"></span></div>
+        <div class="filter-list">
+            <button class="filter-item active" data-filter-type="category" data-filter-value="all">All Products</button>
+            <button class="filter-item" data-filter-type="category" data-filter-value="Bracelets">Bracelets</button>
+            <button class="filter-item" data-filter-type="category" data-filter-value="Earrings">Earrings</button>
+            <button class="filter-item" data-filter-type="category" data-filter-value="Necklaces">Necklaces</button>
+            <button class="filter-item" data-filter-type="category" data-filter-value="Anklets">Anklets</button>
+        </div>
+    </div>
 
-            <div class="products-grid" id="allProducts"></div>
+    <div class="filter-group">
+        <div class="filter-title">Availability <span class="toggle-icon"></span></div>
+        <div class="filter-content">
+            <label class="checkbox-container">Only Show In Stock
+                <input type="checkbox" id="inStockFilter" checked>
+                <span class="checkmark"></span>
+            </label>
+        </div>
+    </div>
+</aside>
+
+<div class="shop-content">
+    <div class="shop-controls">
+        <div class="product-count"><span id="productCountDisplay">8</span> PRODUCTS</div>
+        
+        <div class="sort-dropdown">
+            SORT BY 
+            <select id="sortSelect">
+                <option value="default">Default</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name-asc">Name: A-Z</option>
+            </select>
+        </div>
+    </div>
+    <div class="products-grid-clean" id="allProducts">
+        </div>
+</div>
+               
+            </div>
         </div>
     </main>
 
@@ -56,7 +100,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -72,7 +116,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>
@@ -81,6 +125,7 @@
             </div>
         </div>
     </footer>
+
 
     <script src="app.js"></script>
 </body>

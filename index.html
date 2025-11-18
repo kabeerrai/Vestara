@@ -15,7 +15,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -34,6 +34,7 @@
             <a href="products.html">Products</a>
             <a href="reviews.html">Reviews</a>
             <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart-link">Cart (<span id="navCartCount">0</span>)</a>
             <a href="warranty.html">Warranty</a>
             <a href="policies.html">Policies</a>
             <a href="privacy.html">Privacy Policy</a>
@@ -42,30 +43,62 @@
 
     <section class="hero">
         <div class="hero-content">
-            <h1>Transform Your Space</h1>
-            <p>Discover premium home decor that brings style and comfort together</p>
+            <h1>Elegance • Style • Everyday Glam</h1>
+            <p>Trendy Artificial Jewellery for Modern Women</p>
             <a href="products.html" class="btn btn-primary">Shop Now</a>
         </div>
     </section>
 
-    <section class="featured-products">
+     <section class="featured-products">
         <div class="container">
-            <h2 class="section-title">Featured Products</h2>
-            <div class="products-grid" id="featuredProducts"></div>
-            <div class="text-center">
-                <a href="products.html" class="btn btn-secondary">View All Products</a>
+            <div class="scroll-header">
+                <h2 class="section-title">Get your hands on our best sellers!</h2>
+            </div>
+            <div class="product-scroll" id="featuredProducts"></div>
+            <a href="products.html"><button class="viewall btn btn-primary">View All</button></a>
+        </div>
+    </section>
+
+    <section class="category-grid-section">
+        <div class="container">
+            <h2 class="section-title">Shop by Category</h2>
+            <div class="category-grid">
+                <div class="category-card" onclick="filterByCategory('Bracelets')">
+                    <img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&q=80" alt="Bracelets" class="category-card-image">
+                    <div class="category-card-content">
+                        <h3 class="category-card-name">Bracelets</h3>
+                    </div>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Earrings')">
+                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80" alt="Earrings" class="category-card-image">
+                    <div class="category-card-content">
+                        <h3 class="category-card-name">Earrings</h3>
+                    </div>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Necklaces')">
+                    <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80" alt="Necklaces" class="category-card-image">
+                    <div class="category-card-content">
+                        <h3 class="category-card-name">Necklaces</h3>
+                    </div>
+                </div>
+                <div class="category-card" onclick="filterByCategory('Anklets')">
+                    <img src="https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80" alt="Anklets" class="category-card-image">
+                    <div class="category-card-content">
+                        <h3 class="category-card-name">Anklets</h3>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    
+   
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -81,7 +114,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>

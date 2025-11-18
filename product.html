@@ -15,7 +15,7 @@
                     <span></span>
                     <span></span>
                 </button>
-                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt=""></a>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -40,14 +40,18 @@
         </div>
     </nav>
 
-    <main class="main-content">
+    <main class="product-detail-page">
         <div class="container">
             <a href="products.html" class="back-link">&larr; Back to Products</a>
             
             <div class="product-detail" id="productDetail">
-                <div class="product-detail-image">
-                    <img id="productImage" src="" alt="">
+                <div class="product-gallery">
+                    <div class="main-image-container" id="mainImageContainer">
+                        <img id="mainImage" src="" alt="" class="main-image">
+                    </div>
+                    <div class="thumbnail-container" id="thumbnailContainer"></div>
                 </div>
+
                 <div class="product-detail-info">
                     <h1 id="productName"></h1>
                     <p class="product-price" id="productPrice"></p>
@@ -70,15 +74,30 @@
                     </div>
                 </div>
             </div>
+
+            <div class="similar-products">
+                <h3>You May Also Like</h3>
+                <div class="product-scroll" id="similarProductsScroll"></div>
+            </div>
         </div>
     </main>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" id="lightboxClose">&times;</button>
+            <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&lsaquo;</button>
+            <img id="lightboxImage" src="" alt="">
+            <button class="lightbox-nav lightbox-next" id="lightboxNext">&rsaquo;</button>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -94,7 +113,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>
