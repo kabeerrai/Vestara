@@ -1,11 +1,12 @@
-// server.js (Top Section)
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-const Order = require("./models/order"); // <-- FIX IS HERE
-const Review = require("./models/Review"); // <-- This was already correct
+const Order = require("./models/order");
+const Review = require("./models/Review");
+const adminRoutes = require("./routes/adminRoutes");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -15,18 +16,24 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
+// ==========================================
+// ADMIN ROUTES (Protected with JWT)
+// ==========================================
+app.use("/api/admin", adminRoutes);
 
-// POST — Create Order (This code maps the flat frontend data to your nested Mongoose schema)
-// POST — Create Order (Updated for dynamic cart processing)
+// ==========================================
+// PUBLIC ROUTES (Existing routes)
+// ==========================================
+
+// POST – Create Order
 app.post("/order", async (req, res) => {
   try {
     const incomingData = req.body;
 
-    // --- Customer Details Mapping (Kept intact) ---
     const customerDetails = {
       name: incomingData.name,
       email: incomingData.email,
-      phone: incomingData.phone, // Phone mapping confirmed
+      phone: incomingData.phone,
       street: incomingData.address, 
       city: incomingData.city, 
       zipCode: incomingData.zipCode,
@@ -34,9 +41,6 @@ app.post("/order", async (req, res) => {
       country: incomingData.country,
     };
     
-    // --- Product and Total Calculation (NEW LOGIC) ---
-    
-    // 1. Calculate the secure total based on items sent from the frontend
     if (!incomingData.products || incomingData.products.length === 0) {
         return res.status(400).json({ success: false, error: "Cart is empty." });
     }
@@ -45,12 +49,11 @@ app.post("/order", async (req, res) => {
         sum + (item.price * item.quantity), 0
     );
 
-    // 2. Create the final order object
     const finalOrderData = {
       customer: customerDetails, 
-      products: incomingData.products, // Save the entire product array
+      products: incomingData.products,
       paymentMethod: incomingData.paymentMethod || "Cash on Delivery",
-      totalAmount: calculatedTotal, // Use the calculated total
+      totalAmount: calculatedTotal,
     };
 
     const order = new Order(finalOrderData);
@@ -64,14 +67,13 @@ app.post("/order", async (req, res) => {
   }
 });
 
-// GET — Get All Orders
+// GET – Get All Orders (Public view - keep for compatibility)
 app.get("/orders", async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
   res.json(orders);
 });
 
-
-// POST — Submit Review
+// POST – Submit Review
 app.post("/review", async (req, res) => {
   try {
     const review = new Review(req.body);
@@ -82,13 +84,13 @@ app.post("/review", async (req, res) => {
   }
 });
 
-// GET — Get All Reviews
+// GET – Get All Reviews (Public - visible only)
 app.get("/reviews", async (req, res) => {
-  const reviews = await Review.find().sort({ createdAt: -1 });
+  const reviews = await Review.find({ visible: true }).sort({ createdAt: -1 });
   res.json(reviews);
 });
 
-// DELETE — Delete an Order by ID
+// DELETE – Delete an Order by ID (Public - keep for compatibility)
 app.delete("/order/:id", async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
@@ -98,5 +100,5 @@ app.delete("/order/:id", async (req, res) => {
   }
 });
 
-
-app.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

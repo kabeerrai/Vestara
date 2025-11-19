@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vestara Admin - Orders</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Vestara Admin</h2>
+                <p id="adminEmail"></p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="products.html" class="nav-item">
+                    <span class="icon">📦</span> Products
+                </a>
+                <a href="orders.html" class="nav-item active">
+                    <span class="icon">🛒</span> Orders
+                </a>
+                <a href="reviews.html" class="nav-item">
+                    <span class="icon">⭐</span> Reviews
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Orders</h1>
+                <button onclick="loadOrders()" class="btn-secondary">Refresh</button>
+            </header>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTable">
+                        <tr><td colspan="9">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Order Details</h2>
+                <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+            </div>
+            <div id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script>
+        checkAuth();
+        loadOrders();
+
+        async function loadOrders() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/api/admin/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const orders = data.orders;
+                    const tableHTML = orders.length > 0
+                        ? orders.map(order => `
+                            <tr>
+                                <td><strong>${order.orderNumber}</strong></td>
+                                <td>${order.customer.name}</td>
+                                <td>${order.customer.email}</td>
+                                <td>${order.customer.phone}</td>
+                                <td>${order.products.length} item(s)</td>
+                                <td>RS.${order.totalAmount.toFixed(2)}</td>
+                                <td>
+                                    <select onchange="updateOrderStatus('${order._id}', this.value)" class="status-select">
+                                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                </td>
+                                <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                    <button onclick="viewOrderDetails('${order._id}')" class="btn-small btn-primary">View</button>
+                                    <button onclick="deleteOrder('${order._id}')" class="btn-small btn-danger">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')
+                        : '<tr><td colspan="9">No orders found</td></tr>';
+                    
+                    document.getElementById('ordersTable').innerHTML = tableHTML;
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showNotification('Failed to load orders', 'error');
+            }
+        }
+
+        async function viewOrderDetails(id) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/api/admin/orders/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const order = data.order;
+                    const productsHTML = order.products.map(item => `
+                        <tr>
+                            <td><img src="${item.image || 'placeholder.jpg'}" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>RS.${item.price.toFixed(2)}</td>
+                            <td>RS.${(item.price * item.quantity).toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+
+                    const detailsHTML = `
+                        <div class="order-details">
+                            <div class="detail-section">
+                                <h3>Order Information</h3>
+                                <p><strong>Order Number:</strong> ${order.orderNumber}</p>
+                                <p><strong>Status:</strong> <span class="badge badge-${order.status}">${order.status}</span></p>
+                                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                                <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+                            </div>
+
+                            <div class="detail-section">
+                                <h3>Customer Information</h3>
+                                <p><strong>Name:</strong> ${order.customer.name}</p>
+                                <p><strong>Email:</strong> ${order.customer.email}</p>
+                                <p><strong>Phone:</strong> ${order.customer.phone}</p>
+                                <p><strong>Address:</strong><br>
+                                   ${order.customer.street}<br>
+                                   ${order.customer.city}, ${order.customer.state} ${order.customer.zipCode}<br>
+                                   ${order.customer.country}
+                                </p>
+                            </div>
+
+                            <div class="detail-section">
+                                <h3>Order Items</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Image</th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${productsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="detail-section">
+                                <h3>Order Summary</h3>
+                                <p><strong>Subtotal:</strong> RS.${order.totalAmount.toFixed(2)}</p>
+                                <p><strong>Shipping:</strong> RS.${(order.shippingCost || 0).toFixed(2)}</p>
+                                <p class="total-amount"><strong>Total:</strong> RS.${(order.totalAmount + (order.shippingCost || 0)).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('orderDetailsContent').innerHTML = detailsHTML;
+                    document.getElementById('orderModal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                showNotification('Failed to load order details', 'error');
+            }
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.remove('active');
+        }
+
+        async function updateOrderStatus(id, status) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/api/admin/orders/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Order status updated');
+                } else {
+                    showNotification('Failed to update status', 'error');
+                    loadOrders(); // Reload to reset dropdown
+                }
+            } catch (error) {
+                console.error('Error updating order:', error);
+                showNotification('Failed to update status', 'error');
+                loadOrders();
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('Are you sure you want to delete this order?')) return;
+
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/api/admin/orders/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Order deleted successfully');
+                    loadOrders();
+                } else {
+                    showNotification('Failed to delete order', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                showNotification('Failed to delete order', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema({
+  orderNumber: {
+    type: String,
+    unique: true,
+    default: () => `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+  },
   customer: {
     name: String,
     email: String,
@@ -11,12 +16,10 @@ const OrderSchema = new mongoose.Schema({
     state: String,
     country: String,
   },
-
   paymentMethod: {
     type: String,
     default: "Cash on Delivery"
   },
-
   products: [
     {
       productId: String,
@@ -26,9 +29,19 @@ const OrderSchema = new mongoose.Schema({
       image: String
     }
   ],
-
-  totalAmount: Number,
-
+  totalAmount: {
+    type: Number,
+    required: true
+  },
+  shippingCost: {
+    type: Number,
+    default: 0
+  },
+  status: {
+    type: String,
+    default: "pending",
+    enum: ["pending", "processing", "shipped", "delivered", "cancelled"]
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Order", OrderSchema);

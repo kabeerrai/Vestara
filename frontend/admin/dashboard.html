@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vestara Admin - Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Vestara Admin</h2>
+                <p id="adminEmail"></p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="products.html" class="nav-item">
+                    <span class="icon">📦</span> Products
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <span class="icon">🛒</span> Orders
+                </a>
+                <a href="reviews.html" class="nav-item">
+                    <span class="icon">⭐</span> Reviews
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn-secondary">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Dashboard</h1>
+                <button onclick="loadStats()" class="btn-secondary">Refresh</button>
+            </header>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <h3 id="totalOrders">-</h3>
+                        <p>Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">-</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <h3 id="totalProfit">-</h3>
+                        <p>Total Profit</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛍️</div>
+                    <div class="stat-info">
+                        <h3 id="totalProducts">-</h3>
+                        <p>Total Products</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-sections">
+                <section class="dashboard-section">
+                    <h2>Recent Orders</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersTable">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="dashboard-section">
+                    <h2>Top Products</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTable">
+                                <tr><td colspan="3">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+    <script>
+        checkAuth();
+        loadStats();
+
+        async function loadStats() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_URL}/api/admin/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch stats');
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    
+                    // Update stat cards
+                    document.getElementById('totalOrders').textContent = stats.totalOrders;
+                    document.getElementById('totalRevenue').textContent = `RS.${stats.totalRevenue.toFixed(2)}`;
+                    document.getElementById('totalProfit').textContent = `RS.${stats.totalProfit.toFixed(2)}`;
+                    document.getElementById('totalProducts').textContent = stats.totalProducts;
+
+                    // Update recent orders table
+                    const recentOrdersHTML = stats.recentSales.length > 0 
+                        ? stats.recentSales.map(order => `
+                            <tr>
+                                <td>${order.orderNumber}</td>
+                                <td>${order.customer}</td>
+                                <td>RS.${order.total.toFixed(2)}</td>
+                                <td><span class="badge badge-${order.status}">${order.status}</span></td>
+                                <td>${new Date(order.date).toLocaleDateString()}</td>
+                            </tr>
+                        `).join('')
+                        : '<tr><td colspan="5">No recent orders</td></tr>';
+                    
+                    document.getElementById('recentOrdersTable').innerHTML = recentOrdersHTML;
+
+                    // Update top products table
+                    const topProductsHTML = stats.topProducts.length > 0
+                        ? stats.topProducts.map(product => `
+                            <tr>
+                                <td>${product.name}</td>
+                                <td>${product.count}</td>
+                                <td>RS.${product.revenue.toFixed(2)}</td>
+                            </tr>
+                        `).join('')
+                        : '<tr><td colspan="3">No sales data</td></tr>';
+                    
+                    document.getElementById('topProductsTable').innerHTML = topProductsHTML;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showNotification('Failed to load dashboard stats', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
