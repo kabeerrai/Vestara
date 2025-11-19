@@ -285,8 +285,8 @@ function calculateCartTotals() {
         subtotal += item.price * item.quantity;
     });
 
-    const shipping = subtotal > 1000 ? 0.00 : 50.00;
-    const taxRate = 0.05;
+    const shipping = subtotal > 5000 ? 0.00 : 250.00;
+    const taxRate = 0.0;
     const tax = subtotal * taxRate;
     const total = subtotal + shipping + tax;
     
