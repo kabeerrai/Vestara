@@ -179,7 +179,7 @@ function displaySearchResults(results) {
             <img src="${product.images[0]}" alt="${product.name}">
             <div class="search-result-info">
                 <h4>${product.name}</h4>
-                <p class="search-result-price">$${product.price.toFixed(2)}</p>
+                <p class="search-result-price">RS.${product.price.toFixed(2)}</p>
                 ${!product.inStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
             </div>
         </a>
@@ -319,7 +319,7 @@ function displayCart() {
             <img src="${item.image}" alt="${item.name}" class="cart-item-image">
             <div class="cart-item-details">
                 <h4 class="cart-item-name">${item.name}</h4>
-                <p class="cart-item-price">$${item.price.toFixed(2)}</p>
+                <p class="cart-item-price">RS.${item.price.toFixed(2)}</p>
                 <div class="quantity-controls">
                     <button class="qty-btn qty-minus" data-id="${item.id}">-</button>
                     <input type="number" value="${item.quantity}" min="1" readonly class="quantity-input" data-id="${item.id}">
@@ -327,16 +327,16 @@ function displayCart() {
                 </div>
             </div>
             <div class="cart-item-actions">
-                <p class="cart-item-subtotal">$${(item.price * item.quantity).toFixed(2)}</p>
+                <p class="cart-item-subtotal">RS.${(item.price * item.quantity).toFixed(2)}</p>
                 <button class="remove-item-btn btn" data-id="${item.id}">Remove</button>
             </div>
         </div>
     `).join('');
 
-    document.getElementById('cartSubtotal').textContent = `$${totals.subtotal.toFixed(2)}`;
-    document.getElementById('cartShipping').textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
-    document.getElementById('cartTax').textContent = `$${totals.tax.toFixed(2)}`;
-    document.getElementById('cartTotal').textContent = `$${totals.total.toFixed(2)}`;
+    document.getElementById('cartSubtotal').textContent = `RS.${totals.subtotal.toFixed(2)}`;
+    document.getElementById('cartShipping').textContent = totals.shipping === 0.00 ? 'FREE' : `RS.${totals.shipping.toFixed(2)}`;
+    document.getElementById('cartTax').textContent = `RS.${totals.tax.toFixed(2)}`;
+    document.getElementById('cartTotal').textContent = `RS.${totals.total.toFixed(2)}`;
 }
 
 function initCartListeners() {
@@ -408,14 +408,14 @@ function displayCheckoutSummary() {
     itemsListContainer.innerHTML = cart.map(item => `
         <div class="summary-item">
             <span class="item-name">${item.name} x${item.quantity}</span>
-            <span class="item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+            <span class="item-price">RS.${(item.price * item.quantity).toFixed(2)}</span>
         </div>
     `).join('');
 
-    checkoutSubtotalEl.textContent = `$${totals.subtotal.toFixed(2)}`;
-    checkoutShippingEl.textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
-    checkoutTaxEl.textContent = `$${totals.tax.toFixed(2)}`;
-    checkoutTotalEl.textContent = `$${totals.total.toFixed(2)}`;
+    checkoutSubtotalEl.textContent = `RS.${totals.subtotal.toFixed(2)}`;
+    checkoutShippingEl.textContent = totals.shipping === 0.00 ? 'FREE' : `RS.${totals.shipping.toFixed(2)}`;
+    checkoutTaxEl.textContent = `RS.${totals.tax.toFixed(2)}`;
+    checkoutTotalEl.textContent = `RS.${totals.total.toFixed(2)}`;
 }
 
 function initNavigation() {
@@ -478,8 +478,8 @@ function displayProducts(containerSelector, productList, limit = null) {
                     <div class="clean-info">
                         <h3 class="clean-name">${productNameUpper}</h3>
                         <div class="clean-price-box">
-                            <span class="clean-price">$${product.price.toFixed(2)}</span>
-                            ${isSale ? `<span class="clean-original-price">$${originalPrice}</span>` : ''}
+                            <span class="clean-price">RS.${product.price.toFixed(2)}</span>
+                            ${isSale ? `<span class="clean-original-price">RS.${originalPrice}</span>` : ''}
                         </div>
                         <div class="star-rating-static">${generateStarRating(product.rating || 4.5)}</div>
                         <div class="color-dots">
@@ -500,7 +500,7 @@ function displayProducts(containerSelector, productList, limit = null) {
                 </div>
                 <div class="product-info">
                     <h3 class="product-name">${product.name}</h3>
-                    <p class="product-price">$${product.price.toFixed(2)}</p>
+                    <p class="product-price">RS.${product.price.toFixed(2)}</p>
                     <a href="product.html?id=${product.id}" class="btn btn-block">View Details</a>
                 </div>
             </div>
@@ -572,7 +572,7 @@ function displayProductDetail() {
     if (productInfo) {
         productInfo.innerHTML = `
             <h1 class="product-name">${product.name}</h1>
-            <p class="product-price">$${product.price.toFixed(2)}</p>
+            <p class="product-price">RS.${product.price.toFixed(2)}</p>
             <p class="product-short-description">${product.shortDescription}</p>
             
             <div class="product-variant">
