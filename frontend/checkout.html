@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vestara - Fine Statement Jewellery</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
+
+                <div style="display: flex; gap: 1rem; align-items: center;">
+        <a href="#" class="search-btn" id="searchBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </a>
+
+                <a href="cart.html" class="cart-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav" id="nav">
+        <div class="nav-overlay" id="navOverlay"></div>
+        <div class="nav-menu">
+            <button class="nav-close" id="navClose">&times;</button>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="reviews.html">Reviews</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html" class="nav-cart-link">Cart (<span id="navCartCount">0</span>)</a>
+            <a href="warranty.html">Warranty</a>
+            <a href="policies.html">Policies</a>
+            <a href="privacy.html">Privacy Policy</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+    <div class="container">
+        <h1 class="section-title">Checkout</h1>
+
+        <div id="checkoutContent"> 
+            
+            <div class="checkout-layout">
+                <div class="checkout-form-column">
+                    <form id="checkoutForm">
+                        <section class="shipping-info">
+                            <h2 class="section-title-small">Shipping Information</h2>
+
+                            <div class="form-group">
+                                <label for="name">Full Name</label>
+                                <input type="text" id="name" name="name" placeholder="John Doe" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="john.doe@example.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address">Street Address</label>
+                                <input type="text" id="address" name="address" placeholder="123 Luxury Lane" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city" placeholder="Karachi" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="zipCode">Zip Code</label>
+                                <input type="text" id="zipCode" name="zipCode" placeholder="10001" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="state">State</label>
+                                <input type="text" id="state" name="state" placeholder="Sindh" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <input  type="text" id="country" name="country" placeholder="Pakistan" required>
+                            </div>
+                        </section>
+
+                        <section class="payment-selection">
+                            <h2 class="section-title-small">Payment Method</h2>
+                            <div class="payment-methods">
+
+                                <div class="payment-method">
+                                    <input type="radio" id="paymentCod" name="paymentMethod" value="cod" checked>
+                                    <span class="radio-indicator"></span>
+                                    <label for="paymentCod">
+                                        Cash on Delivery (COD)
+                                        <span class="payment-method-description">Pay in cash when your order is delivered.</span>
+                                    </label>
+                                </div>
+
+                                <div class="payment-method disabled-option" style="opacity: 0.5; pointer-events: none;">
+                                    <input type="radio" id="paymentCard" name="paymentMethod" value="card" disabled>
+                                    <span class="radio-indicator"></span>
+                                    <label for="paymentCard">
+                                        Credit Card (Temporarily Unavailable)
+                                        <span class="payment-method-description">Visa, MasterCard, Amex</span>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </section>
+
+                        <button type="button" onclick="placeOrder()" class="btn btn-primary btn-block">Confirm Order & Pay</button>
+                    </form>
+                </div>
+
+                <div class="order-summary-column">
+                    <div class="summary-box">
+                        <h2 class="section-title-small">Order Summary</h2>
+                        <div id="checkoutItemsList"> 
+                            </div>
+
+                        <div class="summary-item">
+                            <span>Subtotal</span>
+                            <span id="checkoutSubtotal">RS.0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Shipping</span>
+                            <span id="checkoutShipping">FREE</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Tax (0%)</span>
+                            <span id="checkoutTax">RS.0.00</span> 
+                        </div>
+                        <div class="summary-total">
+                            <span>Total:</span>
+                            <span id="checkoutTotal">RS.0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+</main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Vestara</h4>
+                    <p>Premium jewellery for modern women</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="products.html">Products</a>
+                    <a href="reviews.html">Reviews</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Policies</h4>
+                    <a href="warranty.html">Warranty</a>
+                    <a href="policies.html">Delivery & Returns</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: hello@vestara.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Vestara. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Search Modal -->
+<div id="searchModal" class="search-modal">
+    <div class="search-container">
+        <button id="searchClose" class="search-close">&times;</button>
+        <input type="text" id="searchInput" placeholder="Search for products...">
+        <div id="searchResults"></div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+AOS.init({
+        duration: 800,
+        once: true
+    });
+
+    // We no longer need the form listener, as the button now calls placeOrder() directly.
+    
+    function placeOrder() {
+    const orderData = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value, 
+        email: document.getElementById("email").value, 
+        address: document.getElementById("address").value,
+        
+        // ADD THESE MISSING FIELDS
+        city: document.getElementById("city").value, 
+        zipCode: document.getElementById("zipCode").value,
+        state: document.getElementById("state").value,
+        country: document.getElementById("country").value,
+
+       // 💡 NEW DYNAMIC CART DATA 💡
+        // In a real app, this array would be built dynamically from local storage or session data.
+        // Use this array for testing multi-item orders:
+        products: [
+            { productId: "P001", name: "Premium Watch (Black)", price: 5000, quantity: 1, image: "watch.jpg" },
+            { productId: "P002", name: "Leather Strap (Brown)", price: 500, quantity: 2, image: "strap.jpg" },
+        ],
+        
+    };
+
+        console.log("Attempting to submit order:", orderData);
+
+        fetch("http://localhost:5000/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData),
+        })
+        .then(res => {
+            if (!res.ok) {
+                // If the backend returns a non-200 status
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // SUCCESS PATH
+                console.log("Order submitted successfully:", data.order);
+                
+                // 🚀 CALL YOUR APP.JS REDIRECT FUNCTION HERE 🚀
+                // Assuming your existing redirect logic is in a function called 'handleOrderSuccess'
+                if (typeof handleOrderSuccess === 'function') {
+                    handleOrderSuccess(data.order);
+                } else {
+                    // Fallback if the function is not defined in app.js
+                    window.location.href = "thankyou.html";
+                }
+                
+            } else {
+                // BACKEND FAILURE PATH (e.g., validation error)
+                alert("Order failed! Check console for backend error.");
+                console.error("Backend Error:", data.error);
+            }
+        })
+        .catch(error => {
+            // NETWORK FAILURE PATH
+            alert("A network error occurred. Is your Node server running?");
+            console.error("Fetch Error:", error);
+        });
+    }
+    
+   
+
+    </script>
+</body>
