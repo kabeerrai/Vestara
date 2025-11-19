@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delivery & Returns Policies - Vestara</title>
+    <title>Vestara - Fine Statement Jewellery</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
 <body>
     <header class="header">
@@ -16,6 +17,15 @@
                     <span></span>
                 </button>
                 <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
+
+                <div style="display: flex; gap: 1rem; align-items: center;">
+        <a href="#" class="search-btn" id="searchBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </a>
+
                 <a href="cart.html" class="cart-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
@@ -31,10 +41,13 @@
         <div class="nav-menu">
             <button class="nav-close" id="navClose">&times;</button>
             <a href="index.html">Home</a>
-            <a href="products.html">Shop All</a>
-            <a href="policies.html">Policies</a>
+            <a href="products.html">Products</a>
+            <a href="reviews.html">Reviews</a>
             <a href="contact.html">Contact</a>
-            <a href="cart.html" class="nav-cart">Cart (<span id="navCartCount">0</span>)</a>
+            <a href="cart.html" class="nav-cart-link">Cart (<span id="navCartCount">0</span>)</a>
+            <a href="warranty.html">Warranty</a>
+            <a href="policies.html">Policies</a>
+            <a href="privacy.html">Privacy Policy</a>
         </div>
     </nav>
 
@@ -102,6 +115,21 @@
         </div>
     </footer>
 
-    <script src="app.js"></script>
+    <!-- Search Modal -->
+<div id="searchModal" class="search-modal">
+    <div class="search-container">
+        <button id="searchClose" class="search-close">&times;</button>
+        <input type="text" id="searchInput" placeholder="Search for products...">
+        <div id="searchResults"></div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
 </body>
-</html>
