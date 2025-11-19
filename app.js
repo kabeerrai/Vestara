@@ -110,10 +110,85 @@ const products = [
     }
 ];
 
-// --- Product Utility Functions ---
+// --- Search Functionality ---
+function initSearch() {
+    const searchBtn = document.getElementById('searchBtn');
+    const searchModal = document.getElementById('searchModal');
+    const searchClose = document.getElementById('searchClose');
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
 
+    if (searchBtn && searchModal) {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            searchModal.classList.add('active');
+            setTimeout(() => searchInput.focus(), 100);
+        });
+    }
+
+    if (searchClose) {
+        searchClose.addEventListener('click', () => {
+            searchModal.classList.remove('active');
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+        });
+    }
+
+    // Close on overlay click
+    if (searchModal) {
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                searchModal.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        });
+    }
+
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            const results = products.filter(product => 
+                product.name.toLowerCase().includes(query) ||
+                product.category.toLowerCase().includes(query) ||
+                product.shortDescription.toLowerCase().includes(query)
+            );
+
+            displaySearchResults(results);
+        });
+    }
+}
+
+function displaySearchResults(results) {
+    const searchResults = document.getElementById('searchResults');
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<p class="no-results">No products found</p>';
+        return;
+    }
+
+    searchResults.innerHTML = results.map(product => `
+        <a href="product.html?id=${product.id}" class="search-result-item">
+            <img src="${product.images[0]}" alt="${product.name}">
+            <div class="search-result-info">
+                <h4>${product.name}</h4>
+                <p class="search-result-price">$${product.price.toFixed(2)}</p>
+                ${!product.inStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
+            </div>
+        </a>
+    `).join('');
+}
+
+// --- Product Utility Functions ---
 function filterByCategory(category) {
-    localStorage.setItem('selectedCategory', category);
+    sessionStorage.setItem('selectedCategory', category);
     window.location.href = 'products.html';
 }
 
@@ -125,13 +200,22 @@ function generateStarRating(rating) {
 
 // --- Cart Functions ---
 function getCart() {
-    const cart = localStorage.getItem('cart');
-    return cart ? JSON.parse(cart) : [];
+    try {
+        const cart = sessionStorage.getItem('cart');
+        return cart ? JSON.parse(cart) : [];
+    } catch (e) {
+        console.error('Error reading cart:', e);
+        return [];
+    }
 }
 
 function saveCart(cart) {
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
+    try {
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+    } catch (e) {
+        console.error('Error saving cart:', e);
+    }
 }
 
 function updateCartCount() {
@@ -169,7 +253,6 @@ function addToCart(productId, quantity = 1) {
 
 function showNotification(message) {
     const notification = document.createElement('div');
-    // Using inline styles for simplicity, but best practice is in CSS
     notification.style.cssText = `
         position: fixed;
         top: 100px;
@@ -189,14 +272,11 @@ function showNotification(message) {
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        // Simple fade out/slide out effect
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(20px)';
         setTimeout(() => notification.remove(), 300);
     }, 2000);
 }
-
-// --- UPDATED Cart Totals & Display Logic ---
 
 function calculateCartTotals() {
     const cart = getCart();
@@ -205,9 +285,8 @@ function calculateCartTotals() {
         subtotal += item.price * item.quantity;
     });
 
-    // Simple shipping/tax structure
-    const shipping = subtotal > 1000 ? 0.00 : 50.00; // Free shipping over $1000
-    const taxRate = 0.05; // 5% tax
+    const shipping = subtotal > 1000 ? 0.00 : 50.00;
+    const taxRate = 0.05;
     const tax = subtotal * taxRate;
     const total = subtotal + shipping + tax;
     
@@ -216,30 +295,25 @@ function calculateCartTotals() {
 
 function displayCart() {
     const cart = getCart();
-    
-    // Target the new, correct element IDs from the updated cart.html structure
     const cartItemsList = document.getElementById('cartItemsList');
     const emptyCartMessage = document.getElementById('emptyCartMessage');
-    const cartSummaryColumn = document.querySelector('.cart-summary-column'); 
+    const cartSummaryColumn = document.querySelector('.cart-summary-column');
 
     if (!cartItemsList || !emptyCartMessage || !cartSummaryColumn) return;
 
     const totals = calculateCartTotals();
 
     if (cart.length === 0) {
-        // Show empty state, hide everything else
         emptyCartMessage.style.display = 'block';
         cartItemsList.style.display = 'none';
         cartSummaryColumn.style.display = 'none';
         return;
     }
     
-    // Show cart content
     emptyCartMessage.style.display = 'none';
     cartItemsList.style.display = 'block';
     cartSummaryColumn.style.display = 'block';
 
-    // Inject cart items HTML (The buttons now rely on Event Delegation, not individual listeners)
     cartItemsList.innerHTML = cart.map(item => `
         <div class="cart-item" data-product-id="${item.id}">
             <img src="${item.image}" alt="${item.name}" class="cart-item-image">
@@ -247,32 +321,24 @@ function displayCart() {
                 <h4 class="cart-item-name">${item.name}</h4>
                 <p class="cart-item-price">$${item.price.toFixed(2)}</p>
                 <div class="quantity-controls">
-                    <button class="qty-btn qty-minus " data-id="${item.id}" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">-</button>
-                    <input type="number" value="${item.quantity}" min="1" readonly class="quantity-input" data-id="${item.id}" style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 5px 0;">
-                    <button class="qty-btn qty-plus " data-id="${item.id}"style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">+</button>
+                    <button class="qty-btn qty-minus" data-id="${item.id}">-</button>
+                    <input type="number" value="${item.quantity}" min="1" readonly class="quantity-input" data-id="${item.id}">
+                    <button class="qty-btn qty-plus" data-id="${item.id}">+</button>
                 </div>
             </div>
             <div class="cart-item-actions">
                 <p class="cart-item-subtotal">$${(item.price * item.quantity).toFixed(2)}</p>
-                <button class="remove-item-btn  btn" data-id="${item.id}">Remove</button>
+                <button class="remove-item-btn btn" data-id="${item.id}">Remove</button>
             </div>
         </div>
     `).join('');
 
-    // Update totals box (Now includes Shipping and Tax)
     document.getElementById('cartSubtotal').textContent = `$${totals.subtotal.toFixed(2)}`;
     document.getElementById('cartShipping').textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
     document.getElementById('cartTax').textContent = `$${totals.tax.toFixed(2)}`;
     document.getElementById('cartTotal').textContent = `$${totals.total.toFixed(2)}`;
-    
-    // NOTE: Removed the document.querySelectorAll for listeners here, 
-    // as they are now handled by event delegation in initCartListeners().
 }
 
-/**
- * Attaches a single click listener to the cart container to handle
- * quantity changes and removals using event delegation.
- */
 function initCartListeners() {
     const cartItemsList = document.getElementById('cartItemsList');
     if (!cartItemsList) return;
@@ -281,8 +347,7 @@ function initCartListeners() {
         const target = e.target;
         const productId = parseInt(target.dataset.id);
 
-        // Ensure a button with a valid product ID was clicked
-        if (isNaN(productId)) return; 
+        if (isNaN(productId)) return;
 
         if (target.classList.contains('qty-plus')) {
             updateQuantity(productId, 1);
@@ -293,7 +358,6 @@ function initCartListeners() {
         }
     });
 }
-
 
 function updateQuantity(productId, change) {
     const cart = getCart();
@@ -306,40 +370,34 @@ function updateQuantity(productId, change) {
         }
     }
     saveCart(cart);
-    displayCart(); // Re-render the cart with the new quantity/total
+    displayCart();
 }
 
 function removeFromCart(productId) {
     let cart = getCart();
     cart = cart.filter(item => item.id !== productId);
     saveCart(cart);
-    displayCart(); // Re-render the cart after removal
+    displayCart();
     showNotification("Item removed from cart.");
 }
 
 function displayCheckoutSummary() {
     const cart = getCart();
-    
-    // Target the new, correct element IDs from the updated checkout.html structure
     const itemsListContainer = document.getElementById('checkoutItemsList');
     const totals = calculateCartTotals();
     
-    // Check for essential elements
     if (!itemsListContainer) return;
     
-    // Get all summary total elements (required for empty cart reset)
     const checkoutSubtotalEl = document.getElementById('checkoutSubtotal');
     const checkoutShippingEl = document.getElementById('checkoutShipping');
     const checkoutTaxEl = document.getElementById('checkoutTax');
     const checkoutTotalEl = document.getElementById('checkoutTotal');
     
-    // Exit if any critical element is missing (e.g., checkoutTotalEl)
     if (!checkoutTotalEl) return;
     
     if (cart.length === 0) {
         itemsListContainer.innerHTML = '<p style="padding: 1rem; text-align: center;">Your cart is empty. Please add items to proceed.</p>';
         
-        // Reset totals if cart is empty
         checkoutSubtotalEl.textContent = '$0.00';
         checkoutShippingEl.textContent = '$0.00';
         checkoutTaxEl.textContent = '$0.00';
@@ -347,7 +405,6 @@ function displayCheckoutSummary() {
         return;
     }
     
-    // 1. Display items
     itemsListContainer.innerHTML = cart.map(item => `
         <div class="summary-item">
             <span class="item-name">${item.name} x${item.quantity}</span>
@@ -355,15 +412,12 @@ function displayCheckoutSummary() {
         </div>
     `).join('');
 
-    // 2. Update totals box
     checkoutSubtotalEl.textContent = `$${totals.subtotal.toFixed(2)}`;
     checkoutShippingEl.textContent = totals.shipping === 0.00 ? 'FREE' : `$${totals.shipping.toFixed(2)}`;
     checkoutTaxEl.textContent = `$${totals.tax.toFixed(2)}`;
     checkoutTotalEl.textContent = `$${totals.total.toFixed(2)}`;
 }
 
-
-// --- Navigation Functions (No Change) ---
 function initNavigation() {
     const menuToggle = document.getElementById('menuToggle');
     const nav = document.getElementById('nav');
@@ -389,14 +443,12 @@ function initNavigation() {
     }
 }
 
-// --- Display Products Logic (No Change) ---
 function displayProducts(containerSelector, productList, limit = null) {
     const container = document.querySelector(containerSelector);
     if (!container) return;
     
     const productsToDisplay = limit ? productList.slice(0, limit) : productList;
     
-    // Update product count if on the main product page
     if (containerSelector === '#allProducts') {
         const countDisplay = document.getElementById('productCountDisplay');
         if(countDisplay) countDisplay.textContent = productList.length;
@@ -407,12 +459,10 @@ function displayProducts(containerSelector, productList, limit = null) {
         return;
     }
 
-    // Use the CLEAN card design ONLY for the main product list page
-    if (containerSelector === '#allProducts') { 
+    if (containerSelector === '#allProducts') {
         container.innerHTML = productsToDisplay.map(product => {
-            // Logic to simulate Sale price
-            const isSale = product.id % 2 === 0; 
-            const originalPrice = (product.price * 1.2).toFixed(2); 
+            const isSale = product.id % 2 === 0;
+            const originalPrice = (product.price * 1.2).toFixed(2);
             const discount = Math.floor(Math.random() * 20) + 10;
             const productNameUpper = product.name.toUpperCase();
             
@@ -441,7 +491,6 @@ function displayProducts(containerSelector, productList, limit = null) {
             `;
         }).join('');
     } else {
-         // Use the OLD design for other pages (index.html, product.html similar products)
         container.innerHTML = productsToDisplay.map(product => `
             <div class="product-card">
                 <div class="product-image-container">
@@ -459,9 +508,6 @@ function displayProducts(containerSelector, productList, limit = null) {
     }
 }
 
-
-// --- Filtering and Sorting Logic (No Change) ---
-
 function getFiltersAndSortState() {
     const selectedCategory = document.querySelector('.filter-item.active[data-filter-type="category"]')?.dataset.filterValue || 'all';
     const maxPrice = parseFloat(document.getElementById('priceRange')?.value) || Infinity;
@@ -475,20 +521,16 @@ function applyFiltersAndSort() {
     const { selectedCategory, maxPrice, inStockOnly, sortBy } = getFiltersAndSortState();
     let filteredProducts = [...products];
 
-    // 1. Category Filter
     if (selectedCategory !== 'all') {
         filteredProducts = filteredProducts.filter(p => p.category === selectedCategory);
     }
 
-    // 2. Price Filter
     filteredProducts = filteredProducts.filter(p => p.price <= maxPrice);
 
-    // 3. Stock Filter
     if (inStockOnly) {
         filteredProducts = filteredProducts.filter(p => p.inStock);
     }
     
-    // 4. Sorting
     switch (sortBy) {
         case 'price-asc':
             filteredProducts.sort((a, b) => a.price - b.price);
@@ -499,14 +541,11 @@ function applyFiltersAndSort() {
         case 'name-asc':
             filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
             break;
-        // 'default' or any other option maintains the filtered order
     }
 
-    // 5. Display Results
     displayProducts('#allProducts', filteredProducts);
 }
 
-// --- Product Detail Page Logic (No Change to core logic, only updates on elements) ---
 let currentImageIndex = 0;
 let currentProductImages = [];
 const lightbox = document.getElementById('lightbox');
@@ -514,7 +553,7 @@ const lightboxImage = document.getElementById('lightboxImage');
 
 function getProductIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    return parseInt(urlParams.get('id')) || 1; 
+    return parseInt(urlParams.get('id')) || 1;
 }
 
 function displayProductDetail() {
@@ -523,20 +562,18 @@ function displayProductDetail() {
 
     if (!product) {
         console.error("Product not found");
-        return; 
+        return;
     }
 
-    // Update Title
     const pageTitle = document.getElementById('pageTitle');
     if(pageTitle) pageTitle.textContent = `Vestara - ${product.name}`;
 
-    // Product Info
     const productInfo = document.getElementById('productInfo');
     if (productInfo) {
         productInfo.innerHTML = `
             <h1 class="product-name">${product.name}</h1>
             <p class="product-price">$${product.price.toFixed(2)}</p>
-            <p class="product-short-description" style="margin-bottom: 1rem; color: #666;">${product.shortDescription}</p>
+            <p class="product-short-description">${product.shortDescription}</p>
             
             <div class="product-variant">
                 <label>Color:</label>
@@ -545,30 +582,28 @@ function displayProductDetail() {
                 </div>
             </div>
             
-            <div class="quantity-selector" style="margin-bottom: 1.5rem;">
+            <div class="quantity-selector">
                 <label>Quantity:</label>
-                <div class="quantity-controls" style="display: flex; align-items: center; gap: 5px;">
-                    <button class="qty-btn" id="qtyMinus" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">-</button>
-                    <input type="number" id="quantityInput" value="1" min="1" readonly style="width: 40px; text-align: center; border: 1px solid #ccc; padding: 5px 0;"> 
-                    <button class="qty-btn" id="qtyPlus" style="padding: 5px 10px; border: 1px solid #ccc; background: #f9f9f9; cursor: pointer;">+</button>
+                <div class="quantity-controls">
+                    <button class="qty-btn" id="qtyMinus">-</button>
+                    <input type="number" id="quantityInput" value="1" min="1" readonly>
+                    <button class="qty-btn" id="qtyPlus">+</button>
                 </div>
             </div>
 
-            <button class="add-to-cart-btn" id="addToCartBtn">Add to Cart</button>
+            <button class="add-to-cart-btn" id="addToCartBtn">${product.inStock ? 'Add to Cart' : 'Out of Stock'}</button>
             
-            <div class="product-long-description" style="margin-top: 2rem; font-size: 0.9rem; line-height: 1.6;">
+            <div class="product-long-description">
                 <h3>Description</h3>
                 <p>${product.longDescription}</p>
             </div>
         `;
 
-        // Get elements after they have been injected
         const quantityInput = document.getElementById('quantityInput');
         const qtyMinus = document.getElementById('qtyMinus');
         const qtyPlus = document.getElementById('qtyPlus');
         const addToCartBtn = document.getElementById('addToCartBtn');
         
-        // Add Quantity Control Listeners
         if (qtyPlus) {
             qtyPlus.addEventListener('click', () => {
                 let currentQty = parseInt(quantityInput.value);
@@ -579,14 +614,13 @@ function displayProductDetail() {
         if (qtyMinus) {
             qtyMinus.addEventListener('click', () => {
                 let currentQty = parseInt(quantityInput.value);
-                if (currentQty > 1) { 
+                if (currentQty > 1) {
                     quantityInput.value = currentQty - 1;
                 }
             });
         }
         
-        // Add to Cart Listener (NOW reading quantityInput)
-        if (addToCartBtn) {
+        if (addToCartBtn && product.inStock) {
             addToCartBtn.addEventListener('click', () => {
                 const quantity = parseInt(quantityInput.value);
                 addToCart(product.id, quantity);
@@ -594,7 +628,6 @@ function displayProductDetail() {
         }
     }
 
-    // Product Gallery
     currentProductImages = product.images;
     const productGallery = document.getElementById('productGallery');
     
@@ -611,9 +644,8 @@ function displayProductDetail() {
             </div>
         `).join('');
 
-        productGallery.innerHTML = mainImageHtml + `<div class="thumbnail-gallery" style="margin-top: 1rem;">${thumbnailsHtml}</div>`;
+        productGallery.innerHTML = mainImageHtml + `<div class="thumbnail-gallery">${thumbnailsHtml}</div>`;
 
-        // Thumbnails logic
         document.querySelectorAll('.thumbnail-image-container').forEach(thumb => {
             thumb.addEventListener('click', function() {
                 const index = parseInt(this.dataset.index);
@@ -621,19 +653,15 @@ function displayProductDetail() {
             });
         });
         
-        // Lightbox trigger
         const mainImg = document.getElementById('mainProductImage');
         if(mainImg) {
             mainImg.addEventListener('click', () => openLightbox(currentImageIndex));
         }
     }
     
-    // Similar Products
     const similarContainer = document.getElementById('similarProductsScroll');
     if(similarContainer) {
-        // Filter to ensure we don't show the current product as similar
         const similar = products.filter(p => p.category === product.category && p.id !== product.id);
-        // Fallback to showing generic products if no similar ones are found
         displayProducts('#similarProductsScroll', similar.length ? similar : products.slice(0,4));
     }
 }
@@ -649,7 +677,6 @@ function updateMainImage(index) {
     currentImageIndex = index;
 }
 
-// --- Lightbox Functions (No Change) ---
 function initLightbox() {
     const closeBtn = document.querySelector('.lightbox-close');
     const prevBtn = document.querySelector('.lightbox-prev');
@@ -684,31 +711,27 @@ function changeLightboxImage(direction) {
     if(lightboxImage) lightboxImage.src = currentProductImages[currentImageIndex];
 }
 
-
-// --- MASTER INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     initNavigation();
+    initSearch();
     
     const path = window.location.pathname;
 
-    // 1. PRODUCTS LIST PAGE (Products.html)
     if (path.includes('products.html')) {
-        const filterButtons = document.querySelectorAll('.filter-item[data-filter-type="category"]'); 
+        const filterButtons = document.querySelectorAll('.filter-item[data-filter-type="category"]');
         const priceRange = document.getElementById('priceRange');
         const maxPriceValueEl = document.getElementById('maxPriceValue');
         const inStockFilter = document.getElementById('inStockFilter');
         const sortSelect = document.getElementById('sortSelect');
 
-        // Helper to update UI buttons
-        function updateActiveFilter(category) { 
+        function updateActiveFilter(category) {
             filterButtons.forEach(b => {
                 if(b.dataset.filterValue === category) b.classList.add('active');
                 else b.classList.remove('active');
             });
         }
         
-        // Setup initial price filter values
         const maxProductPrice = Math.max(...products.map(p => p.price));
         if (priceRange) {
             priceRange.setAttribute('max', Math.ceil(maxProductPrice));
@@ -718,20 +741,17 @@ document.addEventListener('DOMContentLoaded', () => {
             maxPriceValueEl.textContent = `${parseFloat(priceRange.value).toFixed(2)}`;
         }
 
-        // Handle initial load (from homepage redirect)
-        const selectedCategory = localStorage.getItem('selectedCategory');
+        const selectedCategory = sessionStorage.getItem('selectedCategory');
         
         if (selectedCategory && selectedCategory !== 'all') {
             updateActiveFilter(selectedCategory);
-            localStorage.removeItem('selectedCategory'); 
+            sessionStorage.removeItem('selectedCategory');
         } else {
             updateActiveFilter('all');
         }
         
-        // Initial Display
-        applyFiltersAndSort(); 
+        applyFiltersAndSort();
 
-        // --- Event Listeners ---
         filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 updateActiveFilter(btn.dataset.filterValue);
@@ -744,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (maxPriceValueEl) {
                     maxPriceValueEl.textContent = `${parseFloat(priceRange.value).toFixed(2)}`;
                 }
-                applyFiltersAndSort(); 
+                applyFiltersAndSort();
             });
         }
         
@@ -757,19 +777,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // 2. PRODUCT DETAILS PAGE (product.html)
     else if (path.includes('product.html')) {
         displayProductDetail();
         initLightbox();
     }
     
-    // 3. CART PAGE (cart.html) - NOW CALLS initCartListeners()
     else if (path.includes('cart.html')) {
         displayCart();
-        initCartListeners(); // Attach event delegation listener once
+        initCartListeners();
     }
     
-    // 4. CHECKOUT PAGE (checkout.html)
     else if (path.includes('checkout.html')) {
         displayCheckoutSummary();
         
@@ -778,42 +795,29 @@ document.addEventListener('DOMContentLoaded', () => {
             checkoutForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 
-                // Form is VALID: Process order
                 if (checkoutForm.checkValidity()) {
-                    
-                    // Generate a unique, simulated Order ID
                     const orderId = `VESTARA-${Math.floor(Math.random() * 100000)}`;
-                    
-                    // Store order details in localStorage to display on thank you page
-                    localStorage.setItem('lastOrderId', orderId);
-                    
-                    // Clear the cart
-                    localStorage.removeItem('cart');
-                    updateCartCount(); 
-                    
-                    // Redirect to the dedicated Thank You page
+                    sessionStorage.setItem('lastOrderId', orderId);
+                    sessionStorage.removeItem('cart');
+                    updateCartCount();
                     window.location.href = 'thankyou.html';
-                    
                 } else {
-                    // Form is NOT valid: Trigger native browser error messages
                     checkoutForm.reportValidity();
                 }
             });
         }
     }
     
-    // 5. THANK YOU PAGE (thankyou.html) - NEW LOGIC
     else if (path.includes('thankyou.html')) {
-        const orderId = localStorage.getItem('lastOrderId');
-        // This targets the main content div in thankyou.html
-        const thankYouContent = document.getElementById('thankYouContent'); 
+        const orderId = sessionStorage.getItem('lastOrderId');
+        const thankYouContent = document.getElementById('thankYouContent');
         
         if (thankYouContent) {
             if (orderId) {
                 thankYouContent.innerHTML = `
                     <div class="thank-you-message">
                         <h2 class="section-title">Order Placed Successfully!</h2>
-                        <p>Thank you for your purchase. Your order number is **${orderId}**.</p>
+                        <p>Thank you for your purchase. Your order number is <strong>${orderId}</strong>.</p>
                         <p>A confirmation email has been sent to your provided address.</p>
                         <div style="margin-top: 2rem;">
                             <a href="products.html" class="btn btn-secondary" style="margin-right: 1rem;">Continue Shopping</a>
@@ -821,11 +825,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 `;
-                // Clear the order ID after displaying it so it doesn't show again
-                localStorage.removeItem('lastOrderId'); 
+                sessionStorage.removeItem('lastOrderId');
             } else {
-                 // Handle direct access without a recent order
-                 thankYouContent.innerHTML = `
+                thankYouContent.innerHTML = `
                     <div class="thank-you-message">
                         <h2 class="section-title">Thank You!</h2>
                         <p>We appreciate your business. If you just completed an order, please check your email for confirmation.</p>
@@ -837,9 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     
-    // 6. HOME PAGE (index.html) - Check last for robustness
     else if (path.includes('index.html') || path.endsWith('/')) {
         displayProducts('#featuredProducts', products, 8);
     }
