@@ -1,5 +1,11 @@
 const jwt = require("jsonwebtoken");
 
+const secret = process.env.JWT_SECRET;
+if (!secret) throw new Error("JWT_SECRET is not defined in .env");
+
+const decoded = jwt.verify(token, secret);
+
+
 const authMiddleware = (req, res, next) => {
   try {
     // Get token from Authorization header
