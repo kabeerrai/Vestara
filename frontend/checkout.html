@@ -255,7 +255,7 @@ function placeOrder() {
 
     console.log("Submitting order:", orderData);
 
-    fetch("http://localhost:5000/api/order", {
+    fetch("https://vestara-nab2.onrender.com/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
