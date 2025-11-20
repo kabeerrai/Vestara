@@ -5,7 +5,7 @@ const router = express.Router();
 
 const AdminUser = require("../models/AdminUser");
 const Product = require("../models/Product");
-const Order = require("../models/order");
+const Order = require("../models/Order");
 const Review = require("../models/Review");
 const authMiddleware = require("../middleware/authMiddleware");
 

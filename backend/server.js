@@ -7,7 +7,7 @@ const cors = require("cors");
 
 // Import models
 const Product = require("./models/Product");
-const Order = require("./models/order");
+const Order = require("./models/Order");
 const Review = require("./models/Review");
 
 // Import routes
