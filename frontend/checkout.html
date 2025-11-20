@@ -147,6 +147,10 @@
                             <span>Shipping</span>
                             <span id="checkoutShipping">FREE</span>
                         </divb>
+                        <divb class="summary-item">
+                            <span>Tax(0.00)</span>
+                            <span id="checkoutTax">RS.0.00</span>
+                        </divb>
                         <div class="summary-total">
                             <span>Total:</span>
                             <span id="checkoutTotal">RS.0.00</span>
@@ -237,6 +241,7 @@ function placeOrder() {
         state: document.getElementById("state").value,
         country: document.getElementById("country").value,
         paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || "cod",
+        shippingCost: Number(document.getElementById("checkoutShipping").value),
         
         // ✅ DYNAMIC CART DATA FROM SESSION STORAGE
         products: cart.map(item => ({
