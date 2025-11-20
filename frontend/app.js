@@ -1,5 +1,5 @@
 // API Configuration
-const API_URL = "http://localhost:5000";
+const API_URL = "https://vestara-nab2.onrender.com";
 
 // Global products array (loaded from API)
 let products = [];

@@ -1,7 +1,7 @@
 // Admin Panel JavaScript
 
 // API URL Configuration
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://vestara-nab2.onrender.com';
 
 // Check authentication
 function checkAuth() {
