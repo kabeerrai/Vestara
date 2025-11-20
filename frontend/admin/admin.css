@@ -7,14 +7,14 @@
 
 :root {
     --primary: #000000;
-    --secondary: #333333;
+    --secondary: #121312;
     --success: #22c55e;
     --warning: #eab308;
     --danger: #ef4444;
     --error: #dc2626;
     --bg-primary: #ffffff;
     --bg-secondary: #f9fafb;
-    --bg-dark: #1f2937;
+    --bg-dark: #121312;
     --text-primary: #111827;
     --text-secondary: #6b7280;
     --border: #e5e7eb;
@@ -35,7 +35,7 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #121312 0%, #171917 100%);
 }
 
 .login-container {
@@ -239,6 +239,14 @@ body {
     color: var(--text-primary);
 }
 
+.form-group label1 {
+    display: flex;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -249,6 +257,7 @@ body {
     font-size: 0.875rem;
     transition: border-color 0.2s;
 }
+
 
 .form-group input:focus,
 .form-group textarea:focus,
@@ -262,6 +271,20 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
+
+#productInStock{
+    height: 18px;
+    margin-top: 3px;
+    align-items: left;
+    width: 50px;
+}
+#productOnSale{
+    height: 18px;
+    margin-top: 3px;
+    align-items: left;
+    width: 50px;
+}
+
 
 /* Buttons */
 .btn-primary,
@@ -483,6 +506,7 @@ tr:hover {
     padding: 1.5rem;
     border-top: 1px solid var(--border);
 }
+
 
 /* Order Details */
 .order-details {

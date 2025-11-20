@@ -1,12 +1,22 @@
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
+  productId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
   name: {
     type: String,
     required: true,
     trim: true
   },
-  description: {
+  shortDescription: {
+    type: String,
+    default: ""
+  },
+  longDescription: {
     type: String,
     default: ""
   },
@@ -41,7 +51,12 @@ const ProductSchema = new mongoose.Schema({
     default: 4.5,
     min: 0,
     max: 5
+  },
+  onSale: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model("Product", ProductSchema);
+
+module.exports = mongoose.models.Reviews || mongoose.model("Product", ProductSchema);

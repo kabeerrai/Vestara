@@ -143,14 +143,10 @@
                             <span>Subtotal</span>
                             <span id="checkoutSubtotal">RS.0.00</span>
                         </div>
-                        <div class="summary-item">
+                        <divb class="summary-item">
                             <span>Shipping</span>
                             <span id="checkoutShipping">FREE</span>
-                        </div>
-                        <div class="summary-item">
-                            <span>Tax (0%)</span>
-                            <span id="checkoutTax">RS.0.00</span> 
-                        </div>
+                        </divb>
                         <div class="summary-total">
                             <span>Total:</span>
                             <span id="checkoutTotal">RS.0.00</span>
@@ -218,71 +214,74 @@ AOS.init({
 
     // We no longer need the form listener, as the button now calls placeOrder() directly.
     
-    function placeOrder() {
+
+// REPLACE the placeOrder() function in checkout.html <script> section with this:
+
+function placeOrder() {
+    // Get cart from sessionStorage
+    const cart = getCart();
+    
+    if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
+
+    // Build order data with actual cart items
     const orderData = {
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value, 
         email: document.getElementById("email").value, 
         address: document.getElementById("address").value,
-        
-        // ADD THESE MISSING FIELDS
         city: document.getElementById("city").value, 
         zipCode: document.getElementById("zipCode").value,
         state: document.getElementById("state").value,
         country: document.getElementById("country").value,
-
-       // 💡 NEW DYNAMIC CART DATA 💡
-        // In a real app, this array would be built dynamically from local storage or session data.
-        // Use this array for testing multi-item orders:
-        products: [
-            { productId: "P001", name: "Premium Watch (Black)", price: 5000, quantity: 1, image: "watch.jpg" },
-            { productId: "P002", name: "Leather Strap (Brown)", price: 500, quantity: 2, image: "strap.jpg" },
-        ],
+        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || "cod",
         
+        // ✅ DYNAMIC CART DATA FROM SESSION STORAGE
+        products: cart.map(item => ({
+            productId: item.productId || item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+        }))
     };
 
-        console.log("Attempting to submit order:", orderData);
+    console.log("Submitting order:", orderData);
 
-        fetch("http://localhost:5000/order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(orderData),
-        })
-        .then(res => {
-            if (!res.ok) {
-                // If the backend returns a non-200 status
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // SUCCESS PATH
-                console.log("Order submitted successfully:", data.order);
-                
-                // 🚀 CALL YOUR APP.JS REDIRECT FUNCTION HERE 🚀
-                // Assuming your existing redirect logic is in a function called 'handleOrderSuccess'
-                if (typeof handleOrderSuccess === 'function') {
-                    handleOrderSuccess(data.order);
-                } else {
-                    // Fallback if the function is not defined in app.js
-                    window.location.href = "thankyou.html";
-                }
-                
-            } else {
-                // BACKEND FAILURE PATH (e.g., validation error)
-                alert("Order failed! Check console for backend error.");
-                console.error("Backend Error:", data.error);
-            }
-        })
-        .catch(error => {
-            // NETWORK FAILURE PATH
-            alert("A network error occurred. Is your Node server running?");
-            console.error("Fetch Error:", error);
-        });
-    }
-    
-   
-
+    fetch("http://localhost:5000/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            console.log("✅ Order submitted successfully:", data.order);
+            
+            // Save order ID
+            sessionStorage.setItem('lastOrderId', data.order.orderNumber);
+            
+            // Clear cart
+            sessionStorage.removeItem('cart');
+            
+            // Redirect to thank you page
+            window.location.href = "thankyou.html";
+        } else {
+            alert("Order failed! " + (data.error || "Unknown error"));
+            console.error("Backend Error:", data.error);
+        }
+    })
+    .catch(error => {
+        alert("Network error. Is your server running?");
+        console.error("Fetch Error:", error);
+    });
+}
     </script>
 </body>

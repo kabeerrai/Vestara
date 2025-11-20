@@ -4,49 +4,49 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
+// Import models
+const Product = require("./models/Product");
 const Order = require("./models/order");
 const Review = require("./models/Review");
+
+// Import routes
 const adminRoutes = require("./routes/adminRoutes");
-
-const Product = require("./models/Product.js"); // adjust path if needed
-//const products = require("./data/products");  // adjust path if needed
-
+const publicRoutes = require("./routes/publicRoutes");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true 
-})
-.then(async () => {
-    console.log("MongoDB Connected");
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/vestara';
 
-    // Preload products if DB is empty
-    const count = await Product.countDocuments();
-    if(count === 0){
-        await Product.insertMany(products);
-        console.log("Static products inserted into MongoDB");
-    }
-
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-})
-.catch(err => console.error("MongoDB connection error:", err));
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    
+    // Start server after DB connection
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 // ==========================================
-// ADMIN ROUTES (Protected with JWT)
+// PUBLIC ROUTES
 // ==========================================
-app.use("/api/admin", adminRoutes);
 
-// ==========================================
-// PUBLIC ROUTES (Existing routes)
-// ==========================================
+// Public product routes
+app.use("/api/products", publicRoutes);
 
 // POST – Create Order
-app.post("/order", async (req, res) => {
+app.post("/api/order", async (req, res) => {
   try {
     const incomingData = req.body;
 
@@ -62,11 +62,11 @@ app.post("/order", async (req, res) => {
     };
     
     if (!incomingData.products || incomingData.products.length === 0) {
-        return res.status(400).json({ success: false, error: "Cart is empty." });
+      return res.status(400).json({ success: false, error: "Cart is empty." });
     }
     
     const calculatedTotal = incomingData.products.reduce((sum, item) => 
-        sum + (item.price * item.quantity), 0
+      sum + (item.price * item.quantity), 0
     );
 
     const finalOrderData = {
@@ -87,38 +87,65 @@ app.post("/order", async (req, res) => {
   }
 });
 
-// GET – Get All Orders (Public view - keep for compatibility)
-app.get("/orders", async (req, res) => {
-  const orders = await Order.find().sort({ createdAt: -1 });
-  res.json(orders);
+// GET – Get All Orders (Public view)
+app.get("/api/orders", async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST – Submit Review
-app.post("/review", async (req, res) => {
+app.post("/api/review", async (req, res) => {
   try {
     const review = new Review(req.body);
     await review.save();
     res.json({ success: true, message: "Review saved", review });
   } catch (err) {
-    res.status(500).json({ success: false, error: err });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // GET – Get All Reviews (Public - visible only)
-app.get("/reviews", async (req, res) => {
-  const reviews = await Review.find({ visible: true }).sort({ createdAt: -1 });
-  res.json(reviews);
+app.get("/api/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find({ visible: true }).sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// DELETE – Delete an Order by ID (Public - keep for compatibility)
-app.delete("/order/:id", async (req, res) => {
+// DELETE – Delete an Order by ID (Public)
+app.delete("/api/order/:id", async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Order deleted" });
   } catch (err) {
-    res.status(500).json({ success: false, error: err });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ==========================================
+// ADMIN ROUTES (Protected with JWT)
+// ==========================================
+app.use("/api/admin", adminRoutes);
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Vestara API is running", 
+    version: "2.0.0",
+    endpoints: {
+      public: ["/api/products", "/api/order", "/api/reviews"],
+      admin: ["/api/admin/login", "/api/admin/products", "/api/admin/orders"]
+    }
+  });
+});
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: "Route not found" });
+});

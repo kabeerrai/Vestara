@@ -1,114 +1,25 @@
-// --- Product Data ---
-const products = [
-    {
-        id: 1,
-        name: "Golden Mesh Ring",
-        price: 900.00,
-        category: "Bracelets",
-        inStock: true,
-        rating: 4.5,
-        shortDescription: "Luxurious mesh design gold plated ring",
-        longDescription: "This stunning mesh ring features an intricate design that catches the light from every angle. Gold plated and adjustable.",
-        images: [
-            "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&q=80",
-            "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80"
-        ]
-    },
-    {
-        id: 2,
-        name: "Heart Drop Earrings",
-        price: 1530.00,
-        category: "Earrings",
-        inStock: true,
-        rating: 4.9,
-        shortDescription: "Double heart gold statement earrings",
-        longDescription: "Bold and beautiful, these double heart drop earrings are the perfect statement piece for any outfit. Lightweight and comfortable.",
-        images: [
-            "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80",
-            "https://images.unsplash.com/photo-1630019852942-f89202989a51?w=800&q=80"
-        ]
-    },
-    {
-        id: 3,
-        name: "Snake Chain Necklace",
-        price: 1130.00,
-        category: "Necklaces",
-        inStock: true,
-        rating: 4.2,
-        shortDescription: "Flat herringbone gold snake chain",
-        longDescription: "A classic essential. This herringbone snake chain lays flat against the skin, creating a liquid gold effect. Perfect for layering.",
-        images: [
-            "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80",
-            "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80"
-        ]
-    },
-    {
-        id: 4,
-        name: "Chain Link Cuff",
-        price: 830.00,
-        category: "Anklets",
-        inStock: false,
-        rating: 3.8,
-        shortDescription: "Minimalist chain link adjustable cuff",
-        longDescription: "Modern and minimalist, this chain link cuff adds a touch of edge to your everyday look. Adjustable fit.",
-        images: [
-            "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80",
-            "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80"
-        ]
-    },
-    {
-        id: 5,
-        name: "Pearl Drop Earrings",
-        price: 1200.00,
-        category: "Earrings",
-        inStock: true,
-        rating: 5.0,
-        shortDescription: "Classic freshwater pearl drop earrings",
-        longDescription: "Timeless elegance. These freshwater pearl drop earrings feature a delicate gold setting.",
-        images: [
-            "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80"
-        ]
-    },
-    {
-        id: 6,
-        name: "Layered Gold Necklace",
-        price: 1450.00,
-        category: "Necklaces",
-        inStock: true,
-        rating: 4.7,
-        shortDescription: "Pre-layered double chain necklace",
-        longDescription: "Get the layered look instantly with this double chain necklace set. Features two complementary chain styles.",
-        images: [
-            "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80"
-        ]
-    },
-    {
-        id: 7,
-        name: "Charm Bracelet",
-        price: 950.00,
-        category: "Bracelets",
-        inStock: false,
-        rating: 4.1,
-        shortDescription: "Dainty gold chain with mini charms",
-        longDescription: "A delicate addition to your wrist stack. This dainty chain features small, light-catching charms.",
-        images: [
-            "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&q=80"
-        ]
-    },
-    {
-        id: 8,
-        name: "Beaded Anklet",
-        price: 650.00,
-        category: "Anklets",
-        inStock: true,
-        rating: 4.0,
-        shortDescription: "Gold beaded summer anklet",
-        longDescription: "Summer ready. This beaded anklet features small gold beads on a durable chain.",
-        images: [
-            "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&q=80"
-        ]
+// API Configuration
+const API_URL = "http://localhost:5000";
+
+// Global products array (loaded from API)
+let products = [];
+
+// --- Load Products from API ---
+async function loadProducts() {
+    try {
+        const response = await fetch(`${API_URL}/api/products`);
+        const data = await response.json();
+        
+        if (data.success) {
+            products = data.products;
+            console.log(`✅ Loaded ${products.length} products from database`);
+            return products;
+        }
+    } catch (error) {
+        console.error('❌ Error loading products:', error);
+        return [];
     }
-];
+}
 
 // --- Search Functionality ---
 function initSearch() {
@@ -134,7 +45,6 @@ function initSearch() {
         });
     }
 
-    // Close on overlay click
     if (searchModal) {
         searchModal.addEventListener('click', (e) => {
             if (e.target === searchModal) {
@@ -145,7 +55,6 @@ function initSearch() {
         });
     }
 
-    // Search functionality
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
@@ -158,7 +67,7 @@ function initSearch() {
             const results = products.filter(product => 
                 product.name.toLowerCase().includes(query) ||
                 product.category.toLowerCase().includes(query) ||
-                product.shortDescription.toLowerCase().includes(query)
+                (product.shortDescription && product.shortDescription.toLowerCase().includes(query))
             );
 
             displaySearchResults(results);
@@ -175,12 +84,13 @@ function displaySearchResults(results) {
     }
 
     searchResults.innerHTML = results.map(product => `
-        <a href="product.html?id=${product.id}" class="search-result-item">
-            <img src="${product.images[0]}" alt="${product.name}">
+        <a href="product.html?id=${product._id}" class="search-result-item">
+            <img src="${product.images[0] || 'placeholder.jpg'}" alt="${product.name}">
             <div class="search-result-info">
                 <h4>${product.name}</h4>
                 <p class="search-result-price">RS.${product.price.toFixed(2)}</p>
                 ${!product.inStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
+                ${product.onSale ? '<span class="sale-badge" style="font-size: 0.65rem; padding: 2px 6px; margin-left: 5px;">SALE</span>' : ''}
             </div>
         </a>
     `).join('');
@@ -229,7 +139,7 @@ function updateCartCount() {
 
 function addToCart(productId, quantity = 1) {
     const cart = getCart();
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p._id === productId);
     
     if (!product || quantity < 1) return;
     
@@ -239,10 +149,11 @@ function addToCart(productId, quantity = 1) {
         existingItem.quantity += quantity;
     } else {
         cart.push({
-            id: product.id,
+            id: product._id,
+            productId: product.productId,
             name: product.name,
             price: product.price,
-            image: product.images[0],
+            image: product.images[0] || 'placeholder.jpg',
             quantity: quantity
         });
     }
@@ -292,6 +203,9 @@ function calculateCartTotals() {
     
     return { subtotal, shipping, tax, total };
 }
+
+// NOTE: Continued in Part 2...
+// PART 2 - Cart Display, Product Display, and Page Handlers
 
 function displayCart() {
     const cart = getCart();
@@ -345,9 +259,9 @@ function initCartListeners() {
 
     cartItemsList.addEventListener('click', (e) => {
         const target = e.target;
-        const productId = parseInt(target.dataset.id);
+        const productId = target.dataset.id;
 
-        if (isNaN(productId)) return;
+        if (!productId) return;
 
         if (target.classList.contains('qty-plus')) {
             updateQuantity(productId, 1);
@@ -396,12 +310,11 @@ function displayCheckoutSummary() {
     if (!checkoutTotalEl) return;
     
     if (cart.length === 0) {
-        itemsListContainer.innerHTML = '<p style="padding: 1rem; text-align: center;">Your cart is empty. Please add items to proceed.</p>';
-        
-        checkoutSubtotalEl.textContent = '$0.00';
-        checkoutShippingEl.textContent = '$0.00';
-        checkoutTaxEl.textContent = '$0.00';
-        checkoutTotalEl.textContent = '$0.00';
+        itemsListContainer.innerHTML = '<p style="padding: 1rem; text-align: center;">Your cart is empty.</p>';
+        checkoutSubtotalEl.textContent = 'RS.0.00';
+        checkoutShippingEl.textContent = 'RS.0.00';
+        checkoutTaxEl.textContent = 'RS.0.00';
+        checkoutTotalEl.textContent = 'RS.0.00';
         return;
     }
     
@@ -455,31 +368,27 @@ function displayProducts(containerSelector, productList, limit = null) {
     }
 
     if (productsToDisplay.length === 0) {
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #666;">No products found in this category.</p>';
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #666;">No products found.</p>';
         return;
     }
 
     if (containerSelector === '#allProducts') {
         container.innerHTML = productsToDisplay.map(product => {
-            const isSale = product.id % 2 === 0;
-            const originalPrice = (product.price * 1.2).toFixed(2);
-            const discount = Math.floor(Math.random() * 20) + 10;
             const productNameUpper = product.name.toUpperCase();
             
             return `
                 <div class="product-card-clean">
                     <div class="clean-image-container">
-                        ${isSale ? `<span class="badge-sale">SAVE ${discount}%</span>` : ''}
+                        ${product.onSale ? '<span class="badge-sale">ON SALE</span>' : ''}
                         ${!product.inStock ? '<span class="badge-sale" style="background-color: #333; left: auto; right: 0;">SOLD OUT</span>' : ''}
-                        <a href="product.html?id=${product.id}">
-                            <img src="${product.images[0]}" alt="${product.name}">
+                        <a href="product.html?id=${product._id}">
+                            <img src="${product.images[0] || 'placeholder.jpg'}" alt="${product.name}">
                         </a>
                     </div>
                     <div class="clean-info">
                         <h3 class="clean-name">${productNameUpper}</h3>
                         <div class="clean-price-box">
                             <span class="clean-price">RS.${product.price.toFixed(2)}</span>
-                            ${isSale ? `<span class="clean-original-price">RS.${originalPrice}</span>` : ''}
                         </div>
                         <div class="star-rating-static">${generateStarRating(product.rating || 4.5)}</div>
                         <div class="color-dots">
@@ -494,19 +403,23 @@ function displayProducts(containerSelector, productList, limit = null) {
         container.innerHTML = productsToDisplay.map(product => `
             <div class="product-card">
                 <div class="product-image-container">
-                    <a href="product.html?id=${product.id}">
-                        <img src="${product.images[0]}" alt="${product.name}" class="product-image">
+                    ${product.onSale ? '<span class="sale-badge">SALE</span>' : ''}
+                    <a href="product.html?id=${product._id}">
+                        <img src="${product.images[0] || 'placeholder.jpg'}" alt="${product.name}" class="product-image">
                     </a>
                 </div>
                 <div class="product-info">
                     <h3 class="product-name">${product.name}</h3>
                     <p class="product-price">RS.${product.price.toFixed(2)}</p>
-                    <a href="product.html?id=${product.id}" class="btn btn-block">View Details</a>
+                    <a href="product.html?id=${product._id}" class="btn btn-block">View Details</a>
                 </div>
             </div>
         `).join('');
     }
 }
+
+// NOTE: Continued in Part 3 (Product Detail & Init)...
+// PART 3 - Product Detail Page, Filters, and Initialization
 
 function getFiltersAndSortState() {
     const selectedCategory = document.querySelector('.filter-item.active[data-filter-type="category"]')?.dataset.filterValue || 'all';
@@ -548,121 +461,138 @@ function applyFiltersAndSort() {
 
 let currentImageIndex = 0;
 let currentProductImages = [];
+let currentProduct = null;
 const lightbox = document.getElementById('lightbox');
 const lightboxImage = document.getElementById('lightboxImage');
 
 function getProductIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    return parseInt(urlParams.get('id')) || 1;
+    return urlParams.get('id');
 }
 
-function displayProductDetail() {
+async function displayProductDetail() {
     const productId = getProductIdFromUrl();
-    const product = products.find(p => p.id === productId);
-
-    if (!product) {
-        console.error("Product not found");
+    
+    if (!productId) {
+        console.error("No product ID in URL");
         return;
     }
 
-    const pageTitle = document.getElementById('pageTitle');
-    if(pageTitle) pageTitle.textContent = `Vestara - ${product.name}`;
+    try {
+        const response = await fetch(`${API_URL}/api/products/${productId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error("Product not found");
+            return;
+        }
 
-    const productInfo = document.getElementById('productInfo');
-    if (productInfo) {
-        productInfo.innerHTML = `
-            <h1 class="product-name">${product.name}</h1>
-            <p class="product-price">RS.${product.price.toFixed(2)}</p>
-            <p class="product-short-description">${product.shortDescription}</p>
-            
-            <div class="product-variant">
-                <label>Color:</label>
-                <div class="variant-options">
-                    <span class="variant-option selected">Gold</span>
+        const product = data.product;
+        currentProduct = product;
+
+        const pageTitle = document.getElementById('pageTitle');
+        if(pageTitle) pageTitle.textContent = `Vestara - ${product.name}`;
+
+        const productInfo = document.getElementById('productInfo');
+        if (productInfo) {
+            productInfo.innerHTML = `
+                <h1 class="product-name">${product.name} ${product.onSale ? '<span style="color: #800000; font-size: 0.7rem;">[ON SALE]</span>' : ''}</h1>
+                <p class="product-price">RS.${product.price.toFixed(2)}</p>
+                <p class="product-short-description">${product.shortDescription || product.description}</p>
+                
+                <div class="product-variant">
+                    <label>Color:</label>
+                    <div class="variant-options">
+                        <span class="variant-option selected">Gold</span>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="quantity-selector">
-                <label>Quantity:</label>
-                <div class="quantity-controls">
-                    <button class="qty-btn" id="qtyMinus">-</button>
-                    <input type="number" id="quantityInput" value="1" min="1" readonly>
-                    <button class="qty-btn" id="qtyPlus">+</button>
+                
+                <div class="quantity-selector">
+                    <label>Quantity:</label>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" id="qtyMinus">-</button>
+                        <input type="number" id="quantityInput" value="1" min="1" readonly>
+                        <button class="qty-btn" id="qtyPlus">+</button>
+                    </div>
                 </div>
-            </div>
 
-            <button class="add-to-cart-btn" id="addToCartBtn">${product.inStock ? 'Add to Cart' : 'Out of Stock'}</button>
+                <button class="add-to-cart-btn" id="addToCartBtn" ${!product.inStock ? 'disabled' : ''}>
+                    ${product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                </button>
+                
+                <div class="product-long-description">
+                    <h3>Description</h3>
+                    <p>${product.longDescription || product.description}</p>
+                </div>
+            `;
+
+            const quantityInput = document.getElementById('quantityInput');
+            const qtyMinus = document.getElementById('qtyMinus');
+            const qtyPlus = document.getElementById('qtyPlus');
+            const addToCartBtn = document.getElementById('addToCartBtn');
             
-            <div class="product-long-description">
-                <h3>Description</h3>
-                <p>${product.longDescription}</p>
-            </div>
-        `;
+            if (qtyPlus) {
+                qtyPlus.addEventListener('click', () => {
+                    let currentQty = parseInt(quantityInput.value);
+                    quantityInput.value = currentQty + 1;
+                });
+            }
+            
+            if (qtyMinus) {
+                qtyMinus.addEventListener('click', () => {
+                    let currentQty = parseInt(quantityInput.value);
+                    if (currentQty > 1) {
+                        quantityInput.value = currentQty - 1;
+                    }
+                });
+            }
+            
+            if (addToCartBtn && product.inStock) {
+                addToCartBtn.addEventListener('click', () => {
+                    const quantity = parseInt(quantityInput.value);
+                    addToCart(product._id, quantity);
+                });
+            }
+        }
 
-        const quantityInput = document.getElementById('quantityInput');
-        const qtyMinus = document.getElementById('qtyMinus');
-        const qtyPlus = document.getElementById('qtyPlus');
-        const addToCartBtn = document.getElementById('addToCartBtn');
+        currentProductImages = product.images;
+        const productGallery = document.getElementById('productGallery');
         
-        if (qtyPlus) {
-            qtyPlus.addEventListener('click', () => {
-                let currentQty = parseInt(quantityInput.value);
-                quantityInput.value = currentQty + 1;
+        if (productGallery) {
+            const mainImageHtml = `
+                <div class="main-image-container">
+                    <img src="${product.images[0] || 'placeholder.jpg'}" alt="${product.name}" class="main-image" id="mainProductImage">
+                </div>
+            `;
+
+            const thumbnailsHtml = product.images.map((img, index) => `
+                <div class="thumbnail-image-container ${index === 0 ? 'active' : ''}" data-index="${index}">
+                    <img src="${img}" alt="${product.name} thumbnail" class="thumbnail-image">
+                </div>
+            `).join('');
+
+            productGallery.innerHTML = mainImageHtml + `<div class="thumbnail-gallery">${thumbnailsHtml}</div>`;
+
+            document.querySelectorAll('.thumbnail-image-container').forEach(thumb => {
+                thumb.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    updateMainImage(index);
+                });
             });
+            
+            const mainImg = document.getElementById('mainProductImage');
+            if(mainImg) {
+                mainImg.addEventListener('click', () => openLightbox(currentImageIndex));
+            }
         }
         
-        if (qtyMinus) {
-            qtyMinus.addEventListener('click', () => {
-                let currentQty = parseInt(quantityInput.value);
-                if (currentQty > 1) {
-                    quantityInput.value = currentQty - 1;
-                }
-            });
+        const similarContainer = document.getElementById('similarProductsScroll');
+        if(similarContainer) {
+            const similar = products.filter(p => p.category === product.category && p._id !== product._id);
+            displayProducts('#similarProductsScroll', similar.length ? similar : products.slice(0,4));
         }
-        
-        if (addToCartBtn && product.inStock) {
-            addToCartBtn.addEventListener('click', () => {
-                const quantity = parseInt(quantityInput.value);
-                addToCart(product.id, quantity);
-            });
-        }
-    }
-
-    currentProductImages = product.images;
-    const productGallery = document.getElementById('productGallery');
-    
-    if (productGallery) {
-        const mainImageHtml = `
-            <div class="main-image-container">
-                <img src="${product.images[0]}" alt="${product.name}" class="main-image" id="mainProductImage">
-            </div>
-        `;
-
-        const thumbnailsHtml = product.images.map((img, index) => `
-            <div class="thumbnail-image-container ${index === 0 ? 'active' : ''}" data-index="${index}">
-                <img src="${img}" alt="${product.name} thumbnail" class="thumbnail-image">
-            </div>
-        `).join('');
-
-        productGallery.innerHTML = mainImageHtml + `<div class="thumbnail-gallery">${thumbnailsHtml}</div>`;
-
-        document.querySelectorAll('.thumbnail-image-container').forEach(thumb => {
-            thumb.addEventListener('click', function() {
-                const index = parseInt(this.dataset.index);
-                updateMainImage(index);
-            });
-        });
-        
-        const mainImg = document.getElementById('mainProductImage');
-        if(mainImg) {
-            mainImg.addEventListener('click', () => openLightbox(currentImageIndex));
-        }
-    }
-    
-    const similarContainer = document.getElementById('similarProductsScroll');
-    if(similarContainer) {
-        const similar = products.filter(p => p.category === product.category && p.id !== product.id);
-        displayProducts('#similarProductsScroll', similar.length ? similar : products.slice(0,4));
+    } catch (error) {
+        console.error("Error loading product:", error);
     }
 }
 
@@ -711,7 +641,11 @@ function changeLightboxImage(direction) {
     if(lightboxImage) lightboxImage.src = currentProductImages[currentImageIndex];
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// Main Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load products from API first
+    await loadProducts();
+    
     updateCartCount();
     initNavigation();
     initSearch();
@@ -732,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        const maxProductPrice = Math.max(...products.map(p => p.price));
+        const maxProductPrice = products.length > 0 ? Math.max(...products.map(p => p.price)) : 1600;
         if (priceRange) {
             priceRange.setAttribute('max', Math.ceil(maxProductPrice));
             priceRange.value = Math.ceil(maxProductPrice);
@@ -778,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     else if (path.includes('product.html')) {
-        displayProductDetail();
+        await displayProductDetail();
         initLightbox();
     }
     
@@ -789,23 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     else if (path.includes('checkout.html')) {
         displayCheckoutSummary();
-        
-        const checkoutForm = document.getElementById('checkoutForm');
-        if (checkoutForm) {
-            checkoutForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                if (checkoutForm.checkValidity()) {
-                    const orderId = `VESTARA-${Math.floor(Math.random() * 100000)}`;
-                    sessionStorage.setItem('lastOrderId', orderId);
-                    sessionStorage.removeItem('cart');
-                    updateCartCount();
-                    window.location.href = 'thankyou.html';
-                } else {
-                    checkoutForm.reportValidity();
-                }
-            });
-        }
     }
     
     else if (path.includes('thankyou.html')) {
@@ -830,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 thankYouContent.innerHTML = `
                     <div class="thank-you-message">
                         <h2 class="section-title">Thank You!</h2>
-                        <p>We appreciate your business. If you just completed an order, please check your email for confirmation.</p>
+                        <p>We appreciate your business.</p>
                         <div style="margin-top: 2rem;">
                             <a href="products.html" class="btn btn-primary">Continue Shopping</a>
                         </div>

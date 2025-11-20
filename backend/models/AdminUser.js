@@ -23,4 +23,5 @@ const AdminUserSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model("AdminUser", AdminUserSchema);
+
+module.exports = mongoose.models.AdminUser || mongoose.model("AdminUser", AdminUserSchema);
