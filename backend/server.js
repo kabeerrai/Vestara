@@ -1,20 +1,40 @@
+// Load environment variables first
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
-
 const Order = require("./models/order");
 const Review = require("./models/Review");
 const adminRoutes = require("./routes/adminRoutes");
+
+const Product = require("./models/Product.js"); // adjust path if needed
+//const products = require("./data/products");  // adjust path if needed
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true 
+})
+.then(async () => {
+    console.log("MongoDB Connected");
+
+    // Preload products if DB is empty
+    const count = await Product.countDocuments();
+    if(count === 0){
+        await Product.insertMany(products);
+        console.log("Static products inserted into MongoDB");
+    }
+
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+})
+.catch(err => console.error("MongoDB connection error:", err));
 
 // ==========================================
 // ADMIN ROUTES (Protected with JWT)
