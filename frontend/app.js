@@ -1,7 +1,7 @@
 // ========================================
 // 🔥 PASTE YOUR GOOGLE SCRIPT URL HERE 🔥
 // ========================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhNdT_2A5QH5ax1sZ-kux3_dAvU0GMEIhmbTvARIjnD18LFdvvWD6G71hPC6TcP-M/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqt06A3eSk010cH-HIosJ4e7WayNLRiZzvenM9aLydK21mMgGmcgChPvDOwBFlXK1N/exec";
 
 // Global products array (loaded from Google Sheets)
 let products = [];
