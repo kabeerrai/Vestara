@@ -143,14 +143,14 @@
                             <span>Subtotal</span>
                             <span id="checkoutSubtotal">RS.0.00</span>
                         </div>
-                        <divb class="summary-item">
+                        <div class="summary-item">
                             <span>Shipping</span>
                             <span id="checkoutShipping">FREE</span>
-                        </divb>
-                        <divb class="summary-item">
+                        </div>
+                        <div class="summary-item">
                             <span>Tax(0.00)</span>
                             <span id="checkoutTax">RS.0.00</span>
-                        </divb>
+                        </div>
                         <div class="summary-total">
                             <span>Total:</span>
                             <span id="checkoutTotal">RS.0.00</span>
@@ -211,17 +211,19 @@
             once: true
         });
 
-AOS.init({
-        duration: 800,
-        once: true
-    });
+// ========================================
+// 🔥 ORDER SUBMISSION TO GOOGLE SHEETS 🔥
+// ========================================
+// checkout.html (inside the <script> tag)
 
-    // We no longer need the form listener, as the button now calls placeOrder() directly.
-    
+async function placeOrder() {
+    // Validate form
+    const form = document.getElementById('checkoutForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
 
-// REPLACE the placeOrder() function in checkout.html <script> section with this:
-
-function placeOrder() {
     // Get cart from sessionStorage
     const cart = getCart();
     
@@ -230,7 +232,10 @@ function placeOrder() {
         return;
     }
 
-    // Build order data with actual cart items
+    // Get totals
+    const totals = calculateCartTotals();
+
+    // Build order data for Google Sheets
     const orderData = {
         name: document.getElementById("name").value,
         phone: document.getElementById("phone").value, 
@@ -241,9 +246,7 @@ function placeOrder() {
         state: document.getElementById("state").value,
         country: document.getElementById("country").value,
         paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || "cod",
-        shippingCost: Number(document.getElementById("checkoutShipping").value),
-        
-        // ✅ DYNAMIC CART DATA FROM SESSION STORAGE
+        shippingCost: totals.shipping,
         products: cart.map(item => ({
             productId: item.productId || item.id,
             name: item.name,
@@ -253,25 +256,31 @@ function placeOrder() {
         }))
     };
 
-    console.log("Submitting order:", orderData);
+    console.log("📦 Submitting order to Google Sheets:", orderData);
 
-    fetch("https://vestara-nab2.onrender.com/api/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-    })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            console.log("✅ Order submitted successfully:", data.order);
+    // Disable button during submission
+    const submitBtn = document.querySelector('button[onclick="placeOrder()"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    try {
+        // FIX: Changed Content-Type to text/plain;charset=utf-8
+        const response = await fetch(`${SCRIPT_URL}?type=addOrder`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(orderData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log("✅ Order submitted successfully:", result);
             
             // Save order ID
-            sessionStorage.setItem('lastOrderId', data.order.orderNumber);
+            const orderNumber = result.orderId || Date.now();
+            sessionStorage.setItem('lastOrderId', orderNumber);
             
             // Clear cart
             sessionStorage.removeItem('cart');
@@ -279,14 +288,18 @@ function placeOrder() {
             // Redirect to thank you page
             window.location.href = "thankyou.html";
         } else {
-            alert("Order failed! " + (data.error || "Unknown error"));
-            console.error("Backend Error:", data.error);
+            alert("Order failed! " + (result.error || "Unknown error"));
+            console.error("❌ Backend Error:", result.error);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Confirm Order & Pay';
         }
-    })
-    .catch(error => {
-        alert("Network error. Is your server running?");
-        console.error("Fetch Error:", error);
-    });
+    } catch (error) {
+        alert("Network error. Please check your connection and try again.");
+        console.error("❌ Fetch Error:", error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirm Order & Pay';
+    }
 }
     </script>
 </body>
+</html>

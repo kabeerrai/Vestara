@@ -1891,3 +1891,113 @@ a {
         padding: 1rem;
     }
 }
+
+/* ========================================
+   ADD THIS TO THE END OF YOUR style.css
+   ======================================== */
+
+/* Reviews Page Styling */
+.review-form-section {
+    background: var(--off-white);
+    padding: 2rem;
+    border: 1px solid var(--ultra-light);
+    margin-bottom: 3rem;
+}
+
+.review-form-section h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.5rem;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.25rem;
+    font-size: 2rem;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.star-rating .star {
+    color: var(--primary-black);
+    transition: color 0.2s;
+}
+
+.star-rating .star:hover {
+    color: #FFD700;
+}
+
+.reviews-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.review-card {
+    background: var(--off-white);
+    padding: 2rem;
+    border: 1px solid var(--ultra-light);
+    transition: box-shadow 0.3s;
+}
+
+.review-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--ultra-light);
+}
+
+.reviewer-name {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary-black);
+}
+
+.review-rating {
+    font-size: 0.85rem;
+    color: var(--primary-black);
+}
+
+.review-text {
+    font-size: 0.95rem;
+    color: var(--medium-gray);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.review-date {
+    font-size: 0.8rem;
+    color: var(--light-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Responsive for Reviews */
+@media (max-width: 768px) {
+    .review-form-section {
+        padding: 1.5rem;
+    }
+    
+    .review-card {
+        padding: 1.5rem;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .star-rating {
+        font-size: 1.5rem;
+    }
+}
