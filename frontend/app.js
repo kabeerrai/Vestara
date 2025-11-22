@@ -98,41 +98,61 @@ async function loadProducts(forceRefresh = false) {
   
   try {
     console.log('📦 Fetching products from server...');
-    const response = await fetch(`${SCRIPT_URL}?type=allProducts${forceRefresh ? '&nocache=true' : ''}`);
-    const result = await response.json();
+    
+    // Use 'products' endpoint (works with both old and new backend)
+    let response = await fetch(`${SCRIPT_URL}?type=products`);
+    let result = await response.json();
+    
+    console.log('📦 Raw API response:', result);
     
     if (result.error) {
       console.error('❌ Server error:', result.error);
+      // Try old endpoint as fallback
+      console.log('📦 Trying fallback endpoint...');
+      response = await fetch(`${SCRIPT_URL}?type=products`);
+      result = await response.json();
+      console.log('📦 Fallback response:', result);
+    }
+    
+    // Handle both response formats:
+    // New format: { products: [...], fromCache: true, total: N }
+    // Old format: [...] (direct array)
+    let rawProducts;
+    if (result.products && Array.isArray(result.products)) {
+      rawProducts = result.products;
+    } else if (Array.isArray(result)) {
+      rawProducts = result;
+    } else {
+      console.error('❌ Unexpected response format:', result);
       return [];
     }
     
-    const rawProducts = result.products || result;
-    
-    if (!Array.isArray(rawProducts)) {
-      console.error('❌ Expected array, got:', typeof rawProducts);
+    if (rawProducts.length === 0) {
+      console.warn('⚠️ No products returned from server');
       return [];
     }
     
-    // Process products
+    // Process products - handle both old and new field names
     products = rawProducts.map(p => ({
-      _id: String(p.id || ''),
-      productId: String(p.id || ''),
-      name: p.title || 'Unnamed Product',
-      price: parseFloat(p.price) || 0,
-      description: p.description || '',
-      shortDescription: p.shortDescription || p.description || '',
-      longDescription: p.longDescription || p.description || '',
-      images: [p.image].filter(Boolean),
-      category: p.category || 'Uncategorized',
-      rating: parseFloat(p.rating) || 4.5,
-      inStock: p.inStock !== false,
-      onSale: p.onSale === true
+      _id: String(p.id || p.ID || ''),
+      productId: String(p.id || p.ID || ''),
+      name: p.title || p.name || p.Title || 'Unnamed Product',
+      price: parseFloat(p.price || p.Price || 0),
+      description: p.description || p.Description || '',
+      shortDescription: p.shortDescription || p.shortdescription || p.short_description || p.description || '',
+      longDescription: p.longDescription || p.longdescription || p.long_description || p.description || '',
+      images: [p.image || p.Image].filter(Boolean),
+      category: p.category || p.Category || 'Uncategorized',
+      rating: parseFloat(p.rating || p.Rating || 4.5),
+      inStock: p.inStock !== false && p.instock !== 'FALSE' && p.instock !== false && p.instock !== 'false',
+      onSale: p.onSale === true || p.onsale === 'TRUE' || p.onsale === true || p.onsale === 'true'
     }));
     
-    // Cache the products
+    // Cache the processed products
     setCachedData(CONFIG.CACHE_KEY_PRODUCTS, products);
     
-    console.log(`✅ Loaded ${products.length} products from server (cached: ${result.fromCache || false})`);
+    console.log(`✅ Loaded ${products.length} products from server`);
+    console.log('📦 First product sample:', products[0]);
     return products;
   } catch (error) {
     console.error('❌ Error loading products:', error);
