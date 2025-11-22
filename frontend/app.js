@@ -2,7 +2,7 @@
 // VESTARA STORE - app.js (FIXED FOR SALE PRICES)
 // ==========================================
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3migI2wowknYZo4nSacxiTMRqtf79KMZDkscz-dnQdWmVhRKzY1M1vzxT1JCGy0Ct/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCA75nC0D-w0a_CXYAgpMYGMgtiN8Y4TQi5pE2pL78b2eto6gHk_eXJuUwUMyLIIY/exec";
 
 
 
