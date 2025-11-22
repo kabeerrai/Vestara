@@ -9,7 +9,7 @@
 // ==========================================
 
 // 🔥 PASTE YOUR GOOGLE SCRIPT URL HERE 🔥
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIGmCsHZpn9psKq4Ma_AD9llsg94XxWEMQn2RPB4zJm7K2Yy24JVRFcwex6cV-wnho/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqjWa6I0DlkPmJUNTo0wiRMyyux8wVLmRJ5fJSssbYpD98Hv8l_RtoPlBxFDYWAujM/exec";
 
 // Configuration
 const CONFIG = {
@@ -133,20 +133,33 @@ async function loadProducts(forceRefresh = false) {
     }
     
     // Process products - handle both old and new field names
-    products = rawProducts.map(p => ({
-      _id: String(p.id || p.ID || ''),
-      productId: String(p.id || p.ID || ''),
-      name: p.title || p.name || p.Title || 'Unnamed Product',
-      price: parseFloat(p.price || p.Price || 0),
-      description: p.description || p.Description || '',
-      shortDescription: p.shortDescription || p.shortdescription || p.short_description || p.description || '',
-      longDescription: p.longDescription || p.longdescription || p.long_description || p.description || '',
-      images: [p.image || p.Image].filter(Boolean),
-      category: p.category || p.Category || 'Uncategorized',
-      rating: parseFloat(p.rating || p.Rating || 4.5),
-      inStock: p.inStock !== false && p.instock !== 'FALSE' && p.instock !== false && p.instock !== 'false',
-      onSale: p.onSale === true || p.onsale === 'TRUE' || p.onsale === true || p.onsale === 'true'
-    }));
+    // SUPPORT MULTIPLE IMAGES (comma-separated in sheet)
+    products = rawProducts.map(p => {
+      // Parse images - can be array, comma-separated string, or single URL
+      let imagesArray = [];
+      const imageField = p.images || p.image || p.Image || '';
+      
+      if (Array.isArray(imageField)) {
+        imagesArray = imageField.filter(Boolean);
+      } else if (typeof imageField === 'string' && imageField.length > 0) {
+        imagesArray = imageField.split(',').map(url => url.trim()).filter(url => url.length > 0);
+      }
+      
+      return {
+        _id: String(p.id || p.ID || ''),
+        productId: String(p.id || p.ID || ''),
+        name: p.title || p.name || p.Title || 'Unnamed Product',
+        price: parseFloat(p.price || p.Price || 0),
+        description: p.description || p.Description || '',
+        shortDescription: p.shortDescription || p.shortdescription || p.short_description || p.description || '',
+        longDescription: p.longDescription || p.longdescription || p.long_description || p.description || '',
+        images: imagesArray.length > 0 ? imagesArray : ['placeholder.jpg'],
+        category: p.category || p.Category || 'Uncategorized',
+        rating: parseFloat(p.rating || p.Rating || 4.5),
+        inStock: p.inStock !== false && p.instock !== 'FALSE' && p.instock !== false && p.instock !== 'false',
+        onSale: p.onSale === true || p.onsale === 'TRUE' || p.onsale === true || p.onsale === 'true'
+      };
+    });
     
     // Cache the processed products
     setCachedData(CONFIG.CACHE_KEY_PRODUCTS, products);
@@ -704,27 +717,34 @@ async function displayProductDetail() {
     }
   }
   
-  // Gallery
+  // Gallery - show ALL images with thumbnails
   currentProductImages = product.images.length > 0 ? product.images : ['placeholder.jpg'];
   const productGallery = document.getElementById('productGallery');
   if (productGallery) {
+    const thumbnailsHtml = currentProductImages.length > 1 
+      ? `<div class="thumbnail-gallery">${currentProductImages.map((img, i) => `
+          <div class="thumbnail-image-container ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <img src="${escapeHtml(img)}" alt="${escapeHtml(product.name)} - Image ${i + 1}" class="thumbnail-image">
+          </div>
+        `).join('')}</div>`
+      : ''; // Hide thumbnails if only 1 image
+    
     productGallery.innerHTML = `
       <div class="main-image-container">
         <img src="${escapeHtml(currentProductImages[0])}" alt="${escapeHtml(product.name)}" class="main-image" id="mainProductImage">
+        ${currentProductImages.length > 1 ? `<div class="image-counter">${1} / ${currentProductImages.length}</div>` : ''}
       </div>
-      <div class="thumbnail-gallery">${currentProductImages.map((img, i) => `
-        <div class="thumbnail-image-container ${i === 0 ? 'active' : ''}" data-index="${i}">
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(product.name)} thumbnail" class="thumbnail-image">
-        </div>
-      `).join('')}</div>
+      ${thumbnailsHtml}
     `;
     
+    // Add click handlers for thumbnails
     document.querySelectorAll('.thumbnail-image-container').forEach(thumb => {
       thumb.addEventListener('click', function() {
         updateMainImage(parseInt(this.dataset.index));
       });
     });
     
+    // Click main image to open lightbox
     document.getElementById('mainProductImage')?.addEventListener('click', () => openLightbox(currentImageIndex));
   }
   
@@ -740,6 +760,11 @@ function updateMainImage(index) {
   const mainImage = document.getElementById('mainProductImage');
   if (mainImage) mainImage.src = currentProductImages[index];
   
+  // Update image counter if exists
+  const counter = document.querySelector('.image-counter');
+  if (counter) counter.textContent = `${index + 1} / ${currentProductImages.length}`;
+  
+  // Update active thumbnail
   document.querySelectorAll('.thumbnail-image-container').forEach((thumb, i) => {
     thumb.classList.toggle('active', i === index);
   });
