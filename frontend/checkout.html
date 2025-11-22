@@ -203,18 +203,19 @@
     </div>
 </div>
 
+<!-- Replace the entire <script> section at the bottom of checkout.html with this -->
+
 <script src="app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800,
-            once: true
-        });
+<script>
+    AOS.init({
+        duration: 800,
+        once: true
+    });
 
 // ========================================
 // 🔥 ORDER SUBMISSION TO GOOGLE SHEETS 🔥
 // ========================================
-// checkout.html (inside the <script> tag)
 
 async function placeOrder() {
     // Validate form
@@ -234,10 +235,21 @@ async function placeOrder() {
 
     // Get totals
     const totals = calculateCartTotals();
+    
+    // Calculate total savings (if products have original prices)
+    let totalSavings = 0;
+    cart.forEach(item => {
+        if (item.originalPrice && item.originalPrice > item.price) {
+            totalSavings += (item.originalPrice - item.price) * item.quantity;
+        }
+    });
+
+    // Get customer name
+    const customerName = document.getElementById("name").value;
 
     // Build order data for Google Sheets
     const orderData = {
-        name: document.getElementById("name").value,
+        name: customerName,
         phone: document.getElementById("phone").value, 
         email: document.getElementById("email").value, 
         address: document.getElementById("address").value,
@@ -251,6 +263,7 @@ async function placeOrder() {
             productId: item.productId || item.id,
             name: item.name,
             price: item.price,
+            originalPrice: item.originalPrice || null,
             quantity: item.quantity,
             image: item.image
         }))
@@ -264,7 +277,6 @@ async function placeOrder() {
     submitBtn.textContent = 'Processing...';
 
     try {
-        // FIX: Changed Content-Type to text/plain;charset=utf-8
         const response = await fetch(`${SCRIPT_URL}?type=addOrder`, {
             method: "POST",
             headers: { 
@@ -278,9 +290,26 @@ async function placeOrder() {
         if (result.success) {
             console.log("✅ Order submitted successfully:", result);
             
-            // Save order ID
-            const orderNumber = result.orderId || Date.now();
-            sessionStorage.setItem('lastOrderId', orderNumber);
+            // Get order ID from response
+            const orderId = result.orderId || `ORD-${Date.now()}`;
+            
+            // =============================================
+            // 🔥 SAVE ORDER DATA FOR THANK YOU PAGE 🔥
+            // =============================================
+            sessionStorage.setItem('lastOrderId', orderId);
+            sessionStorage.setItem('lastOrderData', JSON.stringify({
+                name: customerName,
+                items: cart.map(item => ({
+                    name: item.name,
+                    price: item.price,
+                    originalPrice: item.originalPrice || null,
+                    quantity: item.quantity
+                })),
+                subtotal: totals.subtotal,
+                shipping: totals.shipping,
+                total: totals.total,
+                savings: totalSavings
+            }));
             
             // Clear cart
             sessionStorage.removeItem('cart');
@@ -300,6 +329,6 @@ async function placeOrder() {
         submitBtn.textContent = 'Confirm Order & Pay';
     }
 }
-    </script>
+</script>
 </body>
 </html>

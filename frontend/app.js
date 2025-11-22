@@ -1,25 +1,18 @@
 // ==========================================
-// OPTIMIZED VESTARA STORE - app.js
-// ==========================================
-// Features:
-// - Client-side caching with sessionStorage
-// - Pagination support (20 products per page)
-// - Efficient DOM rendering (build once, insert once)
-// - Cache expiry (5 minutes)
+// VESTARA STORE - app.js (FIXED FOR SALE PRICES)
 // ==========================================
 
-// 🔥 PASTE YOUR GOOGLE SCRIPT URL HERE 🔥
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqjWa6I0DlkPmJUNTo0wiRMyyux8wVLmRJ5fJSssbYpD98Hv8l_RtoPlBxFDYWAujM/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5gaho5wCz43gFzx0sQaNOgCxh-mmuV9P1B7aTxOZVrhgPh-t1hzXGJZkEoH0ppL7p/exec";
 
-// Configuration
+
+
 const CONFIG = {
-  CACHE_TTL: 5 * 60 * 1000, // 5 minutes in ms
+  CACHE_TTL: 5 * 60 * 1000,
   PRODUCTS_PER_PAGE: 20,
   CACHE_KEY_PRODUCTS: 'vestara_products_cache',
   CACHE_KEY_REVIEWS: 'vestara_reviews_cache'
 };
 
-// Global state
 let products = [];
 let currentPage = 1;
 let totalPages = 1;
@@ -42,6 +35,51 @@ function generateStarRating(rating) {
   return `${full}${empty} (${rating.toFixed(1)})`;
 }
 
+// Calculate discount percentage from original and sale price
+function calculateDiscount(originalPrice, salePrice) {
+  if (!originalPrice || !salePrice || originalPrice <= salePrice) return 0;
+  return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+}
+
+// ==========================================
+// SKELETON LOADING
+// ==========================================
+
+function generateSkeletonCards(count, isGridView = false) {
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    if (isGridView) {
+      html += `
+        <div class="product-card-clean skeleton-card">
+          <div class="clean-image-container skeleton-box skeleton-image"></div>
+          <div class="clean-info">
+            <div class="skeleton-box skeleton-title"></div>
+            <div class="skeleton-box skeleton-price"></div>
+            <div class="skeleton-box skeleton-rating"></div>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="product-card skeleton-card">
+          <div class="product-image-container skeleton-box skeleton-image"></div>
+          <div class="product-info">
+            <div class="skeleton-box skeleton-title"></div>
+            <div class="skeleton-box skeleton-price"></div>
+            <div class="skeleton-box skeleton-btn"></div>
+          </div>
+        </div>`;
+    }
+  }
+  return html;
+}
+
+function showSkeletonLoading(containerSelector, count = 8) {
+  const container = document.querySelector(containerSelector);
+  if (!container) return;
+  const isGridView = containerSelector === '#allProducts';
+  container.innerHTML = generateSkeletonCards(count, isGridView);
+}
+
 // ==========================================
 // CACHING SYSTEM
 // ==========================================
@@ -50,43 +88,31 @@ function getCachedData(key) {
   try {
     const cached = sessionStorage.getItem(key);
     if (!cached) return null;
-    
     const { data, timestamp } = JSON.parse(cached);
-    const age = Date.now() - timestamp;
-    
-    if (age > CONFIG.CACHE_TTL) {
+    if (Date.now() - timestamp > CONFIG.CACHE_TTL) {
       sessionStorage.removeItem(key);
       return null;
     }
-    
     return data;
-  } catch (e) {
-    console.warn('Cache read error:', e);
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
 function setCachedData(key, data) {
   try {
-    const cacheObj = { data, timestamp: Date.now() };
-    sessionStorage.setItem(key, JSON.stringify(cacheObj));
-  } catch (e) {
-    console.warn('Cache write error:', e);
-  }
+    sessionStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (e) { console.warn('Cache write error:', e); }
 }
 
 function clearCache() {
   sessionStorage.removeItem(CONFIG.CACHE_KEY_PRODUCTS);
   sessionStorage.removeItem(CONFIG.CACHE_KEY_REVIEWS);
-  console.log('Cache cleared');
 }
 
 // ==========================================
-// PRODUCT LOADING
+// PRODUCT LOADING - FIXED PRICE LOGIC
 // ==========================================
 
 async function loadProducts(forceRefresh = false) {
-  // Check cache first
   if (!forceRefresh) {
     const cached = getCachedData(CONFIG.CACHE_KEY_PRODUCTS);
     if (cached && cached.length > 0) {
@@ -98,25 +124,9 @@ async function loadProducts(forceRefresh = false) {
   
   try {
     console.log('📦 Fetching products from server...');
+    const response = await fetch(`${SCRIPT_URL}?type=products`);
+    const result = await response.json();
     
-    // Use 'products' endpoint (works with both old and new backend)
-    let response = await fetch(`${SCRIPT_URL}?type=products`);
-    let result = await response.json();
-    
-    console.log('📦 Raw API response:', result);
-    
-    if (result.error) {
-      console.error('❌ Server error:', result.error);
-      // Try old endpoint as fallback
-      console.log('📦 Trying fallback endpoint...');
-      response = await fetch(`${SCRIPT_URL}?type=products`);
-      result = await response.json();
-      console.log('📦 Fallback response:', result);
-    }
-    
-    // Handle both response formats:
-    // New format: { products: [...], fromCache: true, total: N }
-    // Old format: [...] (direct array)
     let rawProducts;
     if (result.products && Array.isArray(result.products)) {
       rawProducts = result.products;
@@ -127,45 +137,70 @@ async function loadProducts(forceRefresh = false) {
       return [];
     }
     
-    if (rawProducts.length === 0) {
-      console.warn('⚠️ No products returned from server');
-      return [];
-    }
+    if (rawProducts.length === 0) return [];
     
-    // Process products - handle both old and new field names
-    // SUPPORT MULTIPLE IMAGES (comma-separated in sheet)
+    // FIXED: Process products with correct sale price logic
     products = rawProducts.map(p => {
-      // Parse images - can be array, comma-separated string, or single URL
+      // Parse images
       let imagesArray = [];
       const imageField = p.images || p.image || p.Image || '';
-      
       if (Array.isArray(imageField)) {
         imagesArray = imageField.filter(Boolean);
       } else if (typeof imageField === 'string' && imageField.length > 0) {
         imagesArray = imageField.split(',').map(url => url.trim()).filter(url => url.length > 0);
       }
       
+      // FIXED PRICE LOGIC:
+      // From Google Apps Script:
+      // - p.price = original price (full price from sheet)
+      // - p.salePrice = sale price (discounted price, null if not on sale)
+      // - p.onSale = true/false
+      // - p.discountPercent = calculated discount %
+      
+      const originalPrice = parseFloat(p.price || 0);
+      const salePrice = parseFloat(p.salePrice || 0);
+      const isOnSale = p.onSale === true;
+      const discountFromServer = parseInt(p.discountPercent || 0);
+      
+      // Calculate what to display
+      let displayPrice, displayOriginalPrice, discountPercent;
+      
+      if (isOnSale && salePrice > 0) {
+        // ON SALE: show salePrice as main, originalPrice as strikethrough
+        displayPrice = salePrice;
+        displayOriginalPrice = originalPrice;
+        discountPercent = discountFromServer > 0 ? discountFromServer : calculateDiscount(originalPrice, salePrice);
+      } else {
+        // NOT ON SALE: show originalPrice as main, no strikethrough
+        displayPrice = originalPrice;
+        displayOriginalPrice = 0;
+        discountPercent = 0;
+      }
+      
+      // Debug log
+      console.log(`Product: ${p.title} | Original: ${originalPrice} | Sale: ${salePrice} | OnSale: ${isOnSale} | Display: ${displayPrice} | Discount: ${discountPercent}%`);
+      
       return {
         _id: String(p.id || p.ID || ''),
         productId: String(p.id || p.ID || ''),
         name: p.title || p.name || p.Title || 'Unnamed Product',
-        price: parseFloat(p.price || p.Price || 0),
+        price: displayPrice,                    // Current selling price
+        originalPrice: displayOriginalPrice,    // Original price (for strikethrough)
+        discountPercent: discountPercent,       // e.g. 50 for 50% off
         description: p.description || p.Description || '',
-        shortDescription: p.shortDescription || p.shortdescription || p.short_description || p.description || '',
+        shortDescription: p.shortDescription || p.shortdescription || p.short_description || '',
         longDescription: p.longDescription || p.longdescription || p.long_description || p.description || '',
         images: imagesArray.length > 0 ? imagesArray : ['placeholder.jpg'],
         category: p.category || p.Category || 'Uncategorized',
         rating: parseFloat(p.rating || p.Rating || 4.5),
         inStock: p.inStock !== false && p.instock !== 'FALSE' && p.instock !== false && p.instock !== 'false',
-        onSale: p.onSale === true || p.onsale === 'TRUE' || p.onsale === true || p.onsale === 'true'
+        onSale: isOnSale && salePrice > 0  // Only truly on sale if has salePrice
       };
     });
     
-    // Cache the processed products
     setCachedData(CONFIG.CACHE_KEY_PRODUCTS, products);
-    
-    console.log(`✅ Loaded ${products.length} products from server`);
-    console.log('📦 First product sample:', products[0]);
+    console.log(`✅ Loaded ${products.length} products`);
+    console.log('📦 Sample product:', products[0]);
     return products;
   } catch (error) {
     console.error('❌ Error loading products:', error);
@@ -181,30 +216,16 @@ async function loadReviews(productId = null, forceRefresh = false) {
   if (!forceRefresh) {
     const cached = getCachedData(CONFIG.CACHE_KEY_REVIEWS);
     if (cached) {
-      const reviews = productId 
-        ? cached.filter(r => String(r.product_id) === String(productId))
-        : cached;
-      return reviews;
+      return productId ? cached.filter(r => String(r.product_id) === String(productId)) : cached;
     }
   }
-  
   try {
     const response = await fetch(`${SCRIPT_URL}?type=reviews`);
     const reviews = await response.json();
-    
-    if (reviews.error || !Array.isArray(reviews)) {
-      return [];
-    }
-    
+    if (reviews.error || !Array.isArray(reviews)) return [];
     setCachedData(CONFIG.CACHE_KEY_REVIEWS, reviews);
-    
-    return productId 
-      ? reviews.filter(r => String(r.product_id) === String(productId))
-      : reviews;
-  } catch (error) {
-    console.error('❌ Error loading reviews:', error);
-    return [];
-  }
+    return productId ? reviews.filter(r => String(r.product_id) === String(productId)) : reviews;
+  } catch (error) { return []; }
 }
 
 async function submitReview(reviewData) {
@@ -220,19 +241,10 @@ async function submitReview(reviewData) {
         date: new Date().toLocaleDateString()
       })
     });
-    
     const result = await response.json();
-    
-    if (result.success) {
-      // Clear reviews cache
-      sessionStorage.removeItem(CONFIG.CACHE_KEY_REVIEWS);
-    }
-    
+    if (result.success) sessionStorage.removeItem(CONFIG.CACHE_KEY_REVIEWS);
     return result;
-  } catch (error) {
-    console.error('❌ Error submitting review:', error);
-    return { success: false, error: error.message };
-  }
+  } catch (error) { return { success: false, error: error.message }; }
 }
 
 // ==========================================
@@ -278,10 +290,7 @@ function initSearch() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const query = e.target.value.toLowerCase().trim();
-        if (query.length < 2) {
-          if (searchResults) searchResults.innerHTML = '';
-          return;
-        }
+        if (query.length < 2) { if (searchResults) searchResults.innerHTML = ''; return; }
         const results = products.filter(p =>
           p.name.toLowerCase().includes(query) ||
           p.category.toLowerCase().includes(query) ||
@@ -302,18 +311,34 @@ function displaySearchResults(results) {
     return;
   }
   
-  // Build HTML in memory
-  const html = results.map(p => `
-    <a href="product.html?id=${escapeHtml(p._id)}" class="search-result-item">
-      <img src="${escapeHtml(p.images[0]) || 'placeholder.jpg'}" alt="${escapeHtml(p.name)}">
-      <div class="search-result-info">
-        <h4>${escapeHtml(p.name)}</h4>
-        <p class="search-result-price">RS.${p.price.toFixed(2)}</p>
-        ${!p.inStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
-        ${p.onSale ? '<span class="sale-badge" style="font-size:0.65rem;padding:2px 6px;margin-left:5px;">SALE</span>' : ''}
-      </div>
-    </a>
-  `).join('');
+  const html = results.map(p => {
+    // Build badge
+    let badgeHtml = '';
+    if (p.onSale && p.discountPercent > 0) {
+      badgeHtml = `<span class="sale-badge-new">SAVE ${p.discountPercent}%</span>`;
+    } else if (p.onSale) {
+      badgeHtml = '<span class="sale-badge-new">ON SALE</span>';
+    }
+    
+    // Build price with strikethrough
+    let priceHtml = `<span class="search-current-price">RS.${p.price.toFixed(2)}</span>`;
+    if (p.originalPrice > 0) {
+      priceHtml += ` <span class="search-original-price">RS.${p.originalPrice.toFixed(2)}</span>`;
+    }
+    
+    return `
+      <a href="product.html?id=${escapeHtml(p._id)}" class="search-result-item">
+        <div class="search-result-image-wrap">
+          ${badgeHtml}
+          <img src="${escapeHtml(p.images[0]) || 'placeholder.jpg'}" alt="${escapeHtml(p.name)}">
+        </div>
+        <div class="search-result-info">
+          <h4>${escapeHtml(p.name)}</h4>
+          <p class="search-result-price">${priceHtml}</p>
+          ${!p.inStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
+        </div>
+      </a>`;
+  }).join('');
   
   container.innerHTML = html;
 }
@@ -323,42 +348,25 @@ function displaySearchResults(results) {
 // ==========================================
 
 function getCart() {
-  try {
-    return JSON.parse(sessionStorage.getItem('cart') || '[]');
-  } catch (e) {
-    return [];
-  }
+  try { return JSON.parse(sessionStorage.getItem('cart') || '[]'); } catch (e) { return []; }
 }
 
 function saveCart(cart) {
-  try {
-    sessionStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-  } catch (e) {
-    console.error('Error saving cart:', e);
-  }
+  try { sessionStorage.setItem('cart', JSON.stringify(cart)); updateCartCount(); } catch (e) {}
 }
 
 function updateCartCount() {
   const cart = getCart();
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  document.querySelectorAll('#cartCount, #navCartCount').forEach(el => {
-    if (el) el.textContent = count;
-  });
+  document.querySelectorAll('#cartCount, #navCartCount').forEach(el => { if (el) el.textContent = count; });
 }
 
 function addToCart(productId, quantity = 1) {
   const cart = getCart();
-  const pid = String(productId);
-  const product = products.find(p => p._id === pid);
+  const product = products.find(p => p._id === String(productId));
+  if (!product || quantity < 1) return;
   
-  if (!product || quantity < 1) {
-    console.error('❌ Product not found or invalid quantity');
-    return;
-  }
-  
-  const existing = cart.find(item => String(item.id) === pid);
-  
+  const existing = cart.find(item => String(item.id) === String(productId));
   if (existing) {
     existing.quantity += quantity;
   } else {
@@ -367,26 +375,20 @@ function addToCart(productId, quantity = 1) {
       productId: product.productId,
       name: product.name,
       price: product.price,
+      originalPrice: product.originalPrice || null,  // Save original price for savings calculation
       image: product.images[0] || 'placeholder.jpg',
       quantity: quantity
     });
   }
-  
   saveCart(cart);
   showNotification(`${quantity} x ${product.name} added to cart!`);
 }
 
 function showNotification(message) {
   const notification = document.createElement('div');
-  notification.style.cssText = `
-    position:fixed;top:100px;right:20px;background:#000;color:#fff;
-    padding:1rem 1.5rem;border-radius:2px;box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    z-index:1000;font-size:0.875rem;letter-spacing:1px;text-transform:uppercase;
-    transition:all 0.3s ease;
-  `;
+  notification.style.cssText = `position:fixed;top:100px;right:20px;background:#000;color:#fff;padding:1rem 1.5rem;border-radius:2px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:1000;font-size:0.875rem;letter-spacing:1px;text-transform:uppercase;transition:all 0.3s ease;`;
   notification.textContent = message;
   document.body.appendChild(notification);
-  
   setTimeout(() => {
     notification.style.opacity = '0';
     notification.style.transform = 'translateX(20px)';
@@ -398,8 +400,7 @@ function calculateCartTotals() {
   const cart = getCart();
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = subtotal > 5000 ? 0 : 250;
-  const tax = 0;
-  return { subtotal, shipping, tax, total: subtotal + shipping + tax };
+  return { subtotal, shipping, tax: 0, total: subtotal + shipping };
 }
 
 function displayCart() {
@@ -407,7 +408,6 @@ function displayCart() {
   const cartItemsList = document.getElementById('cartItemsList');
   const emptyCartMessage = document.getElementById('emptyCartMessage');
   const cartSummaryColumn = document.querySelector('.cart-summary-column');
-  
   if (!cartItemsList || !emptyCartMessage || !cartSummaryColumn) return;
   
   const totals = calculateCartTotals();
@@ -423,7 +423,6 @@ function displayCart() {
   cartItemsList.style.display = 'block';
   cartSummaryColumn.style.display = 'block';
   
-  // Build HTML efficiently
   cartItemsList.innerHTML = cart.map(item => `
     <div class="cart-item" data-product-id="${escapeHtml(String(item.id))}">
       <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="cart-item-image">
@@ -440,10 +439,8 @@ function displayCart() {
         <p class="cart-item-subtotal">RS.${(item.price * item.quantity).toFixed(2)}</p>
         <button class="remove-item-btn btn" data-id="${escapeHtml(String(item.id))}">Remove</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
   
-  // Update totals
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setEl('cartSubtotal', `RS.${totals.subtotal.toFixed(2)}`);
   setEl('cartShipping', totals.shipping === 0 ? 'FREE' : `RS.${totals.shipping.toFixed(2)}`);
@@ -454,11 +451,9 @@ function displayCart() {
 function initCartListeners() {
   const cartItemsList = document.getElementById('cartItemsList');
   if (!cartItemsList) return;
-  
   cartItemsList.addEventListener('click', (e) => {
     const id = e.target.dataset.id;
     if (!id) return;
-    
     if (e.target.classList.contains('qty-plus')) updateQuantity(id, 1);
     else if (e.target.classList.contains('qty-minus')) updateQuantity(id, -1);
     else if (e.target.classList.contains('remove-item-btn')) removeFromCart(id);
@@ -468,9 +463,7 @@ function initCartListeners() {
 function updateQuantity(productId, change) {
   const cart = getCart();
   const item = cart.find(i => String(i.id) === String(productId));
-  if (item) {
-    item.quantity = Math.max(1, item.quantity + change);
-  }
+  if (item) item.quantity = Math.max(1, item.quantity + change);
   saveCart(cart);
   displayCart();
 }
@@ -486,19 +479,15 @@ function displayCheckoutSummary() {
   const cart = getCart();
   const container = document.getElementById('checkoutItemsList');
   const totals = calculateCartTotals();
-  
   if (!container) return;
   
-  if (cart.length === 0) {
-    container.innerHTML = '<p style="padding:1rem;text-align:center;">Your cart is empty.</p>';
-  } else {
-    container.innerHTML = cart.map(item => `
-      <div class="summary-item">
-        <span class="item-name">${escapeHtml(item.name)} x${item.quantity}</span>
-        <span class="item-price">RS.${(item.price * item.quantity).toFixed(2)}</span>
-      </div>
-    `).join('');
-  }
+  container.innerHTML = cart.length === 0 
+    ? '<p style="padding:1rem;text-align:center;">Your cart is empty.</p>'
+    : cart.map(item => `
+        <div class="summary-item">
+          <span class="item-name">${escapeHtml(item.name)} x${item.quantity}</span>
+          <span class="item-price">RS.${(item.price * item.quantity).toFixed(2)}</span>
+        </div>`).join('');
   
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setEl('checkoutSubtotal', `RS.${totals.subtotal.toFixed(2)}`);
@@ -528,7 +517,7 @@ function filterByCategory(category) {
 }
 
 // ==========================================
-// PRODUCT DISPLAY - OPTIMIZED
+// PRODUCT DISPLAY - FIXED WITH SALE PRICES
 // ==========================================
 
 function displayProducts(containerSelector, productList, limit = null) {
@@ -537,21 +526,13 @@ function displayProducts(containerSelector, productList, limit = null) {
   
   const toDisplay = limit ? productList.slice(0, limit) : productList;
   
-  // Update product count if on products page
   if (containerSelector === '#allProducts') {
     const countEl = document.getElementById('productCountDisplay');
     if (countEl) countEl.textContent = productList.length;
   }
   
-  // Show loading skeleton if products not yet loaded
   if (toDisplay.length === 0 && products.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:3rem;">
-        <div style="display:inline-block;width:30px;height:30px;border:3px solid #eee;border-top-color:#000;border-radius:50%;animation:spin 1s linear infinite;"></div>
-        <p style="margin-top:1rem;color:#666;font-size:0.9rem;">Loading products...</p>
-        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-      </div>
-    `;
+    showSkeletonLoading(containerSelector, 8);
     return;
   }
   
@@ -560,18 +541,36 @@ function displayProducts(containerSelector, productList, limit = null) {
     return;
   }
   
-  // Build HTML in memory for efficiency
   let html = '';
   
   if (containerSelector === '#allProducts') {
-    // Products page grid view
+    // PRODUCTS PAGE GRID VIEW
     html = toDisplay.map(p => {
       const shortDesc = p.shortDescription ? `<p class="clean-short-desc">${escapeHtml(p.shortDescription)}</p>` : '';
+      
+      // Sale badge with percentage
+      let badgeHtml = '';
+      if (p.onSale && p.discountPercent > 0) {
+        badgeHtml = `<span class="sale-badge-new">SAVE ${p.discountPercent}%</span>`;
+      } else if (p.onSale) {
+        badgeHtml = `<span class="sale-badge-new">ON SALE</span>`;
+      }
+      
+      const soldOutBadge = !p.inStock ? '<span class="sold-out-badge">SOLD OUT</span>' : '';
+      
+      // Price display with strikethrough for original price
+      let priceHtml;
+      if (p.originalPrice > 0) {
+        priceHtml = `<span class="clean-price">RS.${p.price.toFixed(2)}</span><span class="clean-original-price">RS.${p.originalPrice.toFixed(2)}</span>`;
+      } else {
+        priceHtml = `<span class="clean-price-normal">RS.${p.price.toFixed(2)}</span>`;
+      }
+      
       return `
-        <div class="product-card-clean">
+        <div class="product-card-clean loaded">
           <div class="clean-image-container">
-            ${p.onSale ? '<span class="badge-sale">ON SALE</span>' : ''}
-            ${!p.inStock ? '<span class="badge-sale" style="background-color:#333;left:auto;right:0;">SOLD OUT</span>' : ''}
+            ${badgeHtml}
+            ${soldOutBadge}
             <a href="product.html?id=${escapeHtml(p._id)}">
               <img src="${escapeHtml(p.images[0]) || 'placeholder.jpg'}" alt="${escapeHtml(p.name)}" loading="lazy">
             </a>
@@ -579,33 +578,48 @@ function displayProducts(containerSelector, productList, limit = null) {
           <div class="clean-info">
             <h3 class="clean-name">${escapeHtml(p.name.toUpperCase())}</h3>
             ${shortDesc}
-            <div class="clean-price-box"><span class="clean-price">RS.${p.price.toFixed(2)}</span></div>
+            <div class="clean-price-box">${priceHtml}</div>
             <div class="star-rating-static">${generateStarRating(p.rating || 4.5)}</div>
             <div class="color-dots"><div class="dot gold"></div><div class="dot silver"></div></div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
   } else {
-    // Homepage / scroll view
-    html = toDisplay.map(p => `
-      <div class="product-card">
-        <div class="product-image-container">
-          ${p.onSale ? '<span class="sale-badge">SALE</span>' : ''}
-          <a href="product.html?id=${escapeHtml(p._id)}">
-            <img src="${escapeHtml(p.images[0]) || 'placeholder.jpg'}" alt="${escapeHtml(p.name)}" class="product-image" loading="lazy">
-          </a>
-        </div>
-        <div class="product-info">
-          <h3 class="product-name">${escapeHtml(p.name)}</h3>
-          <p class="product-price">RS.${p.price.toFixed(2)}</p>
-          <a href="product.html?id=${escapeHtml(p._id)}" class="btn btn-block">View Details</a>
-        </div>
-      </div>
-    `).join('');
+    // HOMEPAGE SCROLL VIEW
+    html = toDisplay.map(p => {
+      // Sale badge with percentage
+      let badgeHtml = '';
+      if (p.onSale && p.discountPercent > 0) {
+        badgeHtml = `<span class="sale-badge-new">SAVE ${p.discountPercent}%</span>`;
+      } else if (p.onSale) {
+        badgeHtml = `<span class="sale-badge-new">ON SALE</span>`;
+      }
+      
+      // Price display with strikethrough
+      let priceHtml;
+      if (p.originalPrice > 0) {
+        priceHtml = `<span class="current-price">RS.${p.price.toFixed(2)}</span> <span class="original-price">RS.${p.originalPrice.toFixed(2)}</span>`;
+      } else {
+        priceHtml = `RS.${p.price.toFixed(2)}`;
+      }
+      
+      return `
+        <div class="product-card loaded">
+          <div class="product-image-container">
+            ${badgeHtml}
+            <a href="product.html?id=${escapeHtml(p._id)}">
+              <img src="${escapeHtml(p.images[0]) || 'placeholder.jpg'}" alt="${escapeHtml(p.name)}" class="product-image" loading="lazy">
+            </a>
+          </div>
+          <div class="product-info">
+            <h3 class="product-name">${escapeHtml(p.name)}</h3>
+            <p class="product-price">${priceHtml}</p>
+            <a href="product.html?id=${escapeHtml(p._id)}" class="btn btn-block">View Details</a>
+          </div>
+        </div>`;
+    }).join('');
   }
   
-  // Single DOM update
   container.innerHTML = html;
 }
 
@@ -624,19 +638,12 @@ function getFiltersAndSortState() {
 
 function applyFiltersAndSort() {
   const { selectedCategory, maxPrice, inStockOnly, sortBy } = getFiltersAndSortState();
-  
   let filtered = [...products];
   
-  // Apply filters
-  if (selectedCategory !== 'all') {
-    filtered = filtered.filter(p => p.category === selectedCategory);
-  }
+  if (selectedCategory !== 'all') filtered = filtered.filter(p => p.category === selectedCategory);
   filtered = filtered.filter(p => p.price <= maxPrice);
-  if (inStockOnly) {
-    filtered = filtered.filter(p => p.inStock);
-  }
+  if (inStockOnly) filtered = filtered.filter(p => p.inStock);
   
-  // Apply sort
   switch (sortBy) {
     case 'price-asc': filtered.sort((a, b) => a.price - b.price); break;
     case 'price-desc': filtered.sort((a, b) => b.price - a.price); break;
@@ -647,7 +654,7 @@ function applyFiltersAndSort() {
 }
 
 // ==========================================
-// PRODUCT DETAIL PAGE
+// PRODUCT DETAIL PAGE - FIXED PRICES
 // ==========================================
 
 let currentImageIndex = 0;
@@ -661,7 +668,6 @@ function getProductIdFromUrl() {
 
 async function displayProductDetail() {
   const productId = getProductIdFromUrl();
-  
   if (!productId) {
     const productInfo = document.getElementById('productInfo');
     if (productInfo) productInfo.innerHTML = '<p style="padding:2rem;text-align:center;">No product ID specified.</p>';
@@ -669,7 +675,6 @@ async function displayProductDetail() {
   }
   
   const product = products.find(p => String(p._id) === String(productId));
-  
   if (!product) {
     const productInfo = document.getElementById('productInfo');
     if (productInfo) productInfo.innerHTML = `<p style="padding:2rem;text-align:center;">Product not found (ID: ${escapeHtml(productId)})</p>`;
@@ -679,13 +684,28 @@ async function displayProductDetail() {
   currentProduct = product;
   document.title = `Vestara - ${product.name}`;
   
-  // Product Info
+  // Sale tag with percentage
+  let saleTag = '';
+  if (product.onSale && product.discountPercent > 0) {
+    saleTag = `<span class="detail-sale-tag">SAVE ${product.discountPercent}%</span>`;
+  } else if (product.onSale) {
+    saleTag = `<span class="detail-sale-tag">ON SALE</span>`;
+  }
+  
+  // Price with strikethrough original
+  let priceHtml;
+  if (product.originalPrice > 0) {
+    priceHtml = `<p class="product-price"><span class="detail-current-price">RS.${product.price.toFixed(2)}</span> <span class="detail-original-price">RS.${product.originalPrice.toFixed(2)}</span></p>`;
+  } else {
+    priceHtml = `<p class="product-price">RS.${product.price.toFixed(2)}</p>`;
+  }
+  
   const productInfo = document.getElementById('productInfo');
   if (productInfo) {
     productInfo.innerHTML = `
-      <h1 class="product-name">${escapeHtml(product.name)} ${product.onSale ? '<span style="color:#800000;font-size:0.7rem;">[ON SALE]</span>' : ''}</h1>
-      <p class="product-price">RS.${product.price.toFixed(2)}</p>
-      <p class="product-short-description">${escapeHtml(product.shortDescription || product.description)}</p>
+      <h1 class="product-name">${escapeHtml(product.name)} ${saleTag}</h1>
+      ${priceHtml}
+      <p class="product-short-description">${escapeHtml(product.shortDescription || product.description || '')}</p>
       <div class="product-variant"><label>Color:</label><div class="variant-options"><span class="variant-option selected">Gold</span></div></div>
       <div class="quantity-selector">
         <label>Quantity:</label>
@@ -699,25 +719,15 @@ async function displayProductDetail() {
       <div class="product-long-description"><h3>Description</h3><p>${escapeHtml(product.longDescription || product.description)}</p></div>
     `;
     
-    // Quantity controls
     const quantityInput = document.getElementById('quantityInput');
-    document.getElementById('qtyPlus')?.addEventListener('click', () => {
-      quantityInput.value = (parseInt(quantityInput.value) || 1) + 1;
-    });
-    document.getElementById('qtyMinus')?.addEventListener('click', () => {
-      const v = parseInt(quantityInput.value) || 1;
-      if (v > 1) quantityInput.value = v - 1;
-    });
+    document.getElementById('qtyPlus')?.addEventListener('click', () => { quantityInput.value = (parseInt(quantityInput.value) || 1) + 1; });
+    document.getElementById('qtyMinus')?.addEventListener('click', () => { const v = parseInt(quantityInput.value) || 1; if (v > 1) quantityInput.value = v - 1; });
     
-    // Add to cart
     if (product.inStock) {
-      document.getElementById('addToCartBtn')?.addEventListener('click', () => {
-        addToCart(product._id, parseInt(quantityInput?.value) || 1);
-      });
+      document.getElementById('addToCartBtn')?.addEventListener('click', () => { addToCart(product._id, parseInt(quantityInput?.value) || 1); });
     }
   }
   
-  // Gallery - show ALL images with thumbnails
   currentProductImages = product.images.length > 0 ? product.images : ['placeholder.jpg'];
   const productGallery = document.getElementById('productGallery');
   if (productGallery) {
@@ -725,30 +735,22 @@ async function displayProductDetail() {
       ? `<div class="thumbnail-gallery">${currentProductImages.map((img, i) => `
           <div class="thumbnail-image-container ${i === 0 ? 'active' : ''}" data-index="${i}">
             <img src="${escapeHtml(img)}" alt="${escapeHtml(product.name)} - Image ${i + 1}" class="thumbnail-image">
-          </div>
-        `).join('')}</div>`
-      : ''; // Hide thumbnails if only 1 image
+          </div>`).join('')}</div>` : '';
     
     productGallery.innerHTML = `
       <div class="main-image-container">
         <img src="${escapeHtml(currentProductImages[0])}" alt="${escapeHtml(product.name)}" class="main-image" id="mainProductImage">
-        ${currentProductImages.length > 1 ? `<div class="image-counter">${1} / ${currentProductImages.length}</div>` : ''}
+        ${currentProductImages.length > 1 ? `<div class="image-counter">1 / ${currentProductImages.length}</div>` : ''}
       </div>
       ${thumbnailsHtml}
     `;
     
-    // Add click handlers for thumbnails
     document.querySelectorAll('.thumbnail-image-container').forEach(thumb => {
-      thumb.addEventListener('click', function() {
-        updateMainImage(parseInt(this.dataset.index));
-      });
+      thumb.addEventListener('click', function() { updateMainImage(parseInt(this.dataset.index)); });
     });
-    
-    // Click main image to open lightbox
     document.getElementById('mainProductImage')?.addEventListener('click', () => openLightbox(currentImageIndex));
   }
   
-  // Similar products
   const similarContainer = document.getElementById('similarProductsScroll');
   if (similarContainer) {
     const similar = products.filter(p => p.category === product.category && p._id !== product._id);
@@ -759,15 +761,9 @@ async function displayProductDetail() {
 function updateMainImage(index) {
   const mainImage = document.getElementById('mainProductImage');
   if (mainImage) mainImage.src = currentProductImages[index];
-  
-  // Update image counter if exists
   const counter = document.querySelector('.image-counter');
   if (counter) counter.textContent = `${index + 1} / ${currentProductImages.length}`;
-  
-  // Update active thumbnail
-  document.querySelectorAll('.thumbnail-image-container').forEach((thumb, i) => {
-    thumb.classList.toggle('active', i === index);
-  });
+  document.querySelectorAll('.thumbnail-image-container').forEach((thumb, i) => { thumb.classList.toggle('active', i === index); });
   currentImageIndex = index;
 }
 
@@ -779,7 +775,6 @@ function initLightbox() {
   document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
   document.querySelector('.lightbox-prev')?.addEventListener('click', () => changeLightboxImage(-1));
   document.querySelector('.lightbox-next')?.addEventListener('click', () => changeLightboxImage(1));
-  
   document.addEventListener('keydown', (e) => {
     const lightbox = document.getElementById('lightbox');
     if (lightbox && lightbox.style.display === "block") {
@@ -794,7 +789,6 @@ function openLightbox(index) {
   const lightbox = document.getElementById('lightbox');
   const lightboxImage = document.getElementById('lightboxImage');
   if (!lightbox || !lightboxImage) return;
-  
   currentImageIndex = index;
   lightbox.style.display = "block";
   lightboxImage.src = currentProductImages[currentImageIndex];
@@ -820,31 +814,22 @@ async function initReviewsPage() {
   const reviewRatingInput = document.getElementById('reviewRating');
   const starRating = document.getElementById('starRating');
   
-  // Star rating interaction
   if (starRating) {
     const stars = starRating.querySelectorAll('.star');
     stars.forEach(star => {
       star.addEventListener('click', function() {
         const rating = this.dataset.rating;
         if (reviewRatingInput) reviewRatingInput.value = rating;
-        stars.forEach((s, idx) => {
-          s.textContent = idx < rating ? '★' : '☆';
-        });
+        stars.forEach((s, idx) => { s.textContent = idx < rating ? '★' : '☆'; });
       });
-      
       star.addEventListener('mouseenter', function() {
         const rating = this.dataset.rating;
-        stars.forEach((s, idx) => {
-          s.textContent = idx < rating ? '★' : '☆';
-        });
+        stars.forEach((s, idx) => { s.textContent = idx < rating ? '★' : '☆'; });
       });
     });
-    
     starRating.addEventListener('mouseleave', function() {
       const currentRating = reviewRatingInput ? reviewRatingInput.value : 0;
-      stars.forEach((s, idx) => {
-        s.textContent = idx < currentRating ? '★' : '☆';
-      });
+      stars.forEach((s, idx) => { s.textContent = idx < currentRating ? '★' : '☆'; });
     });
   }
   
@@ -853,12 +838,8 @@ async function initReviewsPage() {
   if (reviewForm) {
     reviewForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const submitBtn = reviewForm.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
-      }
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; }
       
       const reviewData = {
         product_id: "general",
@@ -868,27 +849,14 @@ async function initReviewsPage() {
       };
       
       const result = await submitReview(reviewData);
-      
       if (result.success) {
         showNotification('Review submitted successfully!');
         reviewForm.reset();
         if (reviewRatingInput) reviewRatingInput.value = '5';
-        
-        if (starRating) {
-          starRating.querySelectorAll('.star').forEach((s, i) => {
-            s.textContent = i < 5 ? '★' : '☆';
-          });
-        }
-        
+        if (starRating) starRating.querySelectorAll('.star').forEach((s, i) => { s.textContent = i < 5 ? '★' : '☆'; });
         await displayAllReviews();
-      } else {
-        alert('Failed to submit review. Please try again.');
-      }
-      
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit Review';
-      }
+      } else { alert('Failed to submit review. Please try again.'); }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Review'; }
     });
   }
 }
@@ -896,9 +864,7 @@ async function initReviewsPage() {
 async function displayAllReviews() {
   const reviewsList = document.getElementById('reviewsList');
   if (!reviewsList) return;
-  
   reviewsList.innerHTML = '<p style="text-align:center;padding:2rem;">Loading reviews...</p>';
-  
   const reviews = await loadReviews();
   
   if (reviews.length === 0) {
@@ -914,8 +880,7 @@ async function displayAllReviews() {
       </div>
       <p class="review-text">${escapeHtml(r.review)}</p>
       <p class="review-date">${escapeHtml(r.date || 'Recently')}</p>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ==========================================
@@ -923,132 +888,194 @@ async function displayAllReviews() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load products first (no floating indicator - we'll use inline loading states)
-  await loadProducts();
-  
-  console.log('✅ Products loaded, initializing page...');
-  
-  // Initialize common features
   updateCartCount();
   initNavigation();
   initSearch();
   
   const path = window.location.pathname;
   
-  // ========== PRODUCTS PAGE ==========
+  if (path.includes('products.html')) showSkeletonLoading('#allProducts', 8);
+  else if (path.includes('index.html') || path.endsWith('/')) showSkeletonLoading('#featuredProducts', 8);
+  
+  await loadProducts();
+  console.log('✅ Products loaded, initializing page...');
+  
   if (path.includes('products.html')) {
     const filterButtons = document.querySelectorAll('.filter-item[data-filter-type="category"]');
     const priceRange = document.getElementById('priceRange');
     const maxPriceValueEl = document.getElementById('maxPriceValue');
     
-    function updateActiveFilter(category) {
-      filterButtons.forEach(b => b.classList.toggle('active', b.dataset.filterValue === category));
-    }
+    function updateActiveFilter(category) { filterButtons.forEach(b => b.classList.toggle('active', b.dataset.filterValue === category)); }
     
-    // Set max price based on products
     const maxProductPrice = products.length > 0 ? Math.max(...products.map(p => p.price)) : 1600;
-    if (priceRange) {
-      priceRange.setAttribute('max', Math.ceil(maxProductPrice));
-      priceRange.value = Math.ceil(maxProductPrice);
-    }
+    if (priceRange) { priceRange.setAttribute('max', Math.ceil(maxProductPrice)); priceRange.value = Math.ceil(maxProductPrice); }
     if (maxPriceValueEl) maxPriceValueEl.textContent = `${parseFloat(priceRange?.value || maxProductPrice).toFixed(2)}`;
     
-    // Check for category from homepage
     const selectedCategory = sessionStorage.getItem('selectedCategory');
     updateActiveFilter(selectedCategory && selectedCategory !== 'all' ? selectedCategory : 'all');
     sessionStorage.removeItem('selectedCategory');
     
-    // Initial display
     applyFiltersAndSort();
     
-    // Event listeners
-    filterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateActiveFilter(btn.dataset.filterValue);
-        applyFiltersAndSort();
-      });
-    });
-    
-    priceRange?.addEventListener('input', () => {
-      if (maxPriceValueEl) maxPriceValueEl.textContent = `${parseFloat(priceRange.value).toFixed(2)}`;
-      applyFiltersAndSort();
-    });
-    
+    filterButtons.forEach(btn => { btn.addEventListener('click', () => { updateActiveFilter(btn.dataset.filterValue); applyFiltersAndSort(); }); });
+    priceRange?.addEventListener('input', () => { if (maxPriceValueEl) maxPriceValueEl.textContent = `${parseFloat(priceRange.value).toFixed(2)}`; applyFiltersAndSort(); });
     document.getElementById('inStockFilter')?.addEventListener('change', applyFiltersAndSort);
     document.getElementById('sortSelect')?.addEventListener('change', applyFiltersAndSort);
   }
-  
-  // ========== PRODUCT DETAIL PAGE ==========
-  else if (path.includes('product.html')) {
-    await displayProductDetail();
-    initLightbox();
-  }
-  
-  // ========== CART PAGE ==========
-  else if (path.includes('cart.html')) {
-    displayCart();
-    initCartListeners();
-  }
-  
-  // ========== CHECKOUT PAGE ==========
-  else if (path.includes('checkout.html')) {
-    displayCheckoutSummary();
-  }
-  
-  // ========== THANK YOU PAGE ==========
+  else if (path.includes('product.html')) { await displayProductDetail(); initLightbox(); }
+  else if (path.includes('cart.html')) { displayCart(); initCartListeners(); }
+  else if (path.includes('checkout.html')) { displayCheckoutSummary(); }
   else if (path.includes('thankyou.html')) {
-    const orderId = sessionStorage.getItem('lastOrderId');
-    const thankYouContent = document.getElementById('thankYouContent');
-    
-    if (thankYouContent) {
-      if (orderId) {
-        thankYouContent.innerHTML = `
-          <div class="thank-you-message">
-            <h2 class="section-title">Order Placed Successfully!</h2>
-            <p>Thank you for your purchase. Your order number is <strong>${escapeHtml(orderId)}</strong>.</p>
-            <p>A confirmation email has been sent to your provided address.</p>
-            <div style="margin-top:2rem;">
-              <a href="products.html" class="btn btn-secondary" style="margin-right:1rem;">Continue Shopping</a>
-              <a href="index.html" class="btn btn-primary">Return to Homepage</a>
-            </div>
-          </div>
-        `;
-        sessionStorage.removeItem('lastOrderId');
-      } else {
-        thankYouContent.innerHTML = `
-          <div class="thank-you-message">
-            <h2 class="section-title">Thank You!</h2>
-            <p>We appreciate your business.</p>
-            <div style="margin-top:2rem;">
-              <a href="products.html" class="btn btn-primary">Continue Shopping</a>
-            </div>
-          </div>
-        `;
-      }
-    }
+    displayThankYouPage();
   }
-  
-  // ========== REVIEWS PAGE ==========
-  else if (path.includes('reviews.html')) {
-    await initReviewsPage();
-  }
-  
-  // ========== HOMEPAGE ==========
-  else if (path.includes('index.html') || path.endsWith('/')) {
-    displayProducts('#featuredProducts', products, 8);
-  }
+  else if (path.includes('reviews.html')) { await initReviewsPage(); }
+  else if (path.includes('index.html') || path.endsWith('/')) { displayProducts('#featuredProducts', products, 8); }
 });
 
 // ==========================================
 // EXPOSE GLOBAL FUNCTIONS
 // ==========================================
 
-// For category cards on homepage
 window.filterByCategory = filterByCategory;
-
-// For manual cache clear (debug)
 window.clearVestaraCache = clearCache;
-
-// For checkout page (called from inline script)
 window.getCart = getCart;
 window.calculateCartTotals = calculateCartTotals;
+
+// ==========================================
+// THANK YOU PAGE - ENHANCED
+// ==========================================
+
+function displayThankYouPage() {
+  const thankYouContent = document.getElementById('thankYouContent');
+  if (!thankYouContent) return;
+  
+  // Get saved order data
+  const orderId = sessionStorage.getItem('lastOrderId');
+  const orderDataStr = sessionStorage.getItem('lastOrderData');
+  
+  if (!orderId) {
+    // No order found
+    thankYouContent.innerHTML = `
+      <div class="thank-you-container">
+        <div class="thank-you-icon">✓</div>
+        <h1 class="thank-you-title">Thank You!</h1>
+        <p class="thank-you-subtitle">We appreciate your business.</p>
+        <div class="thank-you-actions">
+          <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+          <a href="index.html" class="btn btn-secondary">Back to Home</a>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Parse order data
+  let orderData = {};
+  try {
+    orderData = JSON.parse(orderDataStr) || {};
+  } catch (e) {
+    orderData = {};
+  }
+  
+  const customerName = orderData.name || 'Valued Customer';
+  const items = orderData.items || [];
+  const subtotal = parseFloat(orderData.subtotal) || 0;
+  const shipping = parseFloat(orderData.shipping) || 0;
+  const total = parseFloat(orderData.total) || 0;
+  const totalSavings = parseFloat(orderData.savings) || 0;
+  
+  // Build order items HTML
+  let itemsHtml = '';
+  if (items.length > 0) {
+    itemsHtml = items.map(item => {
+      const itemTotal = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+      return `
+        <div class="order-item">
+          <span class="order-item-name">${escapeHtml(item.name)} × ${item.quantity}</span>
+          <span class="order-item-price">Rs ${itemTotal.toFixed(2)}</span>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Shipping text
+  const shippingText = shipping === 0 
+    ? '<span class="free-shipping">FREE</span>' 
+    : `Rs ${shipping.toFixed(2)}`;
+  
+  // Savings row (only show if there are savings)
+  const savingsHtml = totalSavings > 0 
+    ? `<div class="order-total-row savings-row">
+         <span>Total Savings:</span>
+         <span class="savings-amount">Rs ${totalSavings.toFixed(2)}</span>
+       </div>` 
+    : '';
+  
+  thankYouContent.innerHTML = `
+    <div class="thank-you-container">
+      <div class="confirmation-number">Confirmation #${escapeHtml(orderId)}</div>
+      
+      <div class="thank-you-header">
+        <div class="thank-you-icon">✓</div>
+        <h1 class="thank-you-title">Thank you, ${escapeHtml(customerName)}!</h1>
+      </div>
+      
+      <div class="order-summary-box">
+        <h2 class="order-summary-title">Order Summary</h2>
+        
+        <div class="order-items-list">
+          ${itemsHtml}
+        </div>
+        
+        <div class="order-totals">
+          <div class="order-total-row">
+            <span>Subtotal:</span>
+            <span>Rs ${subtotal.toFixed(2)}</span>
+          </div>
+          <div class="order-total-row">
+            <span>Shipping:</span>
+            <span>${shippingText}</span>
+          </div>
+          <div class="order-total-row total-final">
+            <span>Total:</span>
+            <span>Rs ${total.toFixed(2)}</span>
+          </div>
+          ${savingsHtml}
+        </div>
+      </div>
+      
+      <p class="thank-you-message">
+        We appreciate your purchase with Vestara! Your order is being processed and you'll receive a confirmation soon.
+      </p>
+      
+      <div class="thank-you-actions">
+        <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+        <a href="index.html" class="btn btn-secondary">Back to Home</a>
+      </div>
+    </div>
+  `;
+  
+  // Clear order data after displaying
+  sessionStorage.removeItem('lastOrderId');
+  sessionStorage.removeItem('lastOrderData');
+}
+
+// ==========================================
+// SAVE ORDER DATA FOR THANK YOU PAGE
+// Call this function when order is placed
+// ==========================================
+
+function saveOrderForThankYou(orderId, customerName, cartItems, subtotal, shipping, total, savings = 0) {
+  sessionStorage.setItem('lastOrderId', orderId);
+  sessionStorage.setItem('lastOrderData', JSON.stringify({
+    name: customerName,
+    items: cartItems,
+    subtotal: subtotal,
+    shipping: shipping,
+    total: total,
+    savings: savings
+  }));
+}
+
+// Expose function globally
+window.saveOrderForThankYou = saveOrderForThankYou;

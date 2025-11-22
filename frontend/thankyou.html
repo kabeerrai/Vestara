@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vestara - Fine Statement Jewellery</title>
+    <title>Thank You - Vestara</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 </head>
@@ -19,19 +19,20 @@
                 <a href="index.html" class="logo"><img src="assets/logo/logo-Photoroom (1).png" alt="Vestara Logo"></a>
 
                 <div style="display: flex; gap: 1rem; align-items: center;">
-        <a href="#" class="search-btn" id="searchBtn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-        </a>
+                    <a href="#" class="search-btn" id="searchBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </a>
 
-                <a href="cart.html" class="cart-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
-                    </svg>
-                    <span class="cart-count" id="cartCount">0</span>
-                </a>
+                    <a href="cart.html" class="cart-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 2L7 6H3L6 20H18L21 6H17L15 2H9Z"/>
+                        </svg>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -53,22 +54,8 @@
 
     <main class="main-content">
         <div class="container">
-            <div class="thank-you-page">
-                <div class="success-icon">✓</div>
-                <h1>Thank You for Your Order!</h1>
-                <p class="order-number">Order #<span id="orderNumber"></span></p>
-                <p class="confirmation-message">
-                    We've received your order and will send you a confirmation email shortly.
-                    Your items will be carefully packaged and shipped within 2-3 business days.
-                </p>
-                
-                <div class="order-details" id="orderDetails"></div>
-
-                <div class="thank-you-actions">
-                    <a href="products.html" class="btn btn-secondary">Continue Shopping</a>
-                    <a href="index.html" class="btn btn-primary">Back to Home</a>
-                </div>
-            </div>
+            <!-- This div will be populated by displayThankYouPage() -->
+            <div id="thankYouContent"></div>
         </div>
     </main>
 
@@ -77,7 +64,7 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>Vestara</h4>
-                    <p>Premium home decor for modern living</p>
+                    <p>Premium jewellery for modern women</p>
                 </div>
                 <div class="footer-section">
                     <h4>Quick Links</h4>
@@ -93,7 +80,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>Contact</h4>
-                    <p>Email: hello@luxeliving.com</p>
+                    <p>Email: hello@vestara.com</p>
                     <p>Phone: (555) 123-4567</p>
                 </div>
             </div>
@@ -104,16 +91,16 @@
     </footer>
 
     <!-- Search Modal -->
-<div id="searchModal" class="search-modal">
-    <div class="search-container">
-        <button id="searchClose" class="search-close">&times;</button>
-        <input type="text" id="searchInput" placeholder="Search for products...">
-        <div id="searchResults"></div>
+    <div id="searchModal" class="search-modal">
+        <div class="search-container">
+            <button id="searchClose" class="search-close">&times;</button>
+            <input type="text" id="searchInput" placeholder="Search for products...">
+            <div id="searchResults"></div>
+        </div>
     </div>
-</div>
 
-<script src="app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
         AOS.init({
             duration: 800,
@@ -121,3 +108,4 @@
         });
     </script>
 </body>
+</html>
