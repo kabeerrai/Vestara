@@ -9,7 +9,7 @@
 // ==========================================
 
 // 🔥 PASTE YOUR GOOGLE SCRIPT URL HERE 🔥
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqt06A3eSk010cH-HIosJ4e7WayNLRiZzvenM9aLydK21mMgGmcgChPvDOwBFlXK1N/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIGmCsHZpn9psKq4Ma_AD9llsg94XxWEMQn2RPB4zJm7K2Yy24JVRFcwex6cV-wnho/exec";
 
 // Configuration
 const CONFIG = {
@@ -530,6 +530,18 @@ function displayProducts(containerSelector, productList, limit = null) {
     if (countEl) countEl.textContent = productList.length;
   }
   
+  // Show loading skeleton if products not yet loaded
+  if (toDisplay.length === 0 && products.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;">
+        <div style="display:inline-block;width:30px;height:30px;border:3px solid #eee;border-top-color:#000;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        <p style="margin-top:1rem;color:#666;font-size:0.9rem;">Loading products...</p>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+    `;
+    return;
+  }
+  
   if (toDisplay.length === 0) {
     container.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:2rem;color:#666;">No products found.</p>';
     return;
@@ -886,21 +898,8 @@ async function displayAllReviews() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Show loading indicator
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.id = 'loadingIndicator';
-  loadingIndicator.style.cssText = `
-    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(0,0,0,0.8);color:#fff;padding:1rem 2rem;
-    z-index:9999;font-size:0.9rem;letter-spacing:1px;display:none;
-  `;
-  loadingIndicator.textContent = 'Loading...';
-  document.body.appendChild(loadingIndicator);
-  
-  // Load products first
-  loadingIndicator.style.display = 'block';
+  // Load products first (no floating indicator - we'll use inline loading states)
   await loadProducts();
-  loadingIndicator.style.display = 'none';
   
   console.log('✅ Products loaded, initializing page...');
   
