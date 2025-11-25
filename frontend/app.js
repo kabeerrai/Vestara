@@ -2,20 +2,20 @@
 // VESTARA STORE - app.js (FIXED FOR SALE PRICES)
 // ==========================================
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_2bg-O077XTk-eZn603KkUzdcB6NkvvyR6PfVJ_2FWHtqeaNLBDfHWlNEaV8ase9B/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNvWy3IDqOx2m1gAeLSTfnFnp8fih-L8d7TR1DgPeDt2YYWyNRrZ7XAuacZZDWqApp/exec";
 
 
 
 const CONFIG = {
   CACHE_TTL: 5 * 60 * 1000,
-  PRODUCTS_PER_PAGE: 40,
+  PRODUCTS_PER_PAGE: 20,
   CACHE_KEY_PRODUCTS: 'vestara_products_cache',
   CACHE_KEY_REVIEWS: 'vestara_reviews_cache'
 };
 
 let products = [];
 let currentPage = 1;
-let totalPages = 1;
+let totalPages = 2;
 let isLoading = false;
 
 // ==========================================
