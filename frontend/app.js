@@ -8,7 +8,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_2bg-O077XTk-eZn60
 
 const CONFIG = {
   CACHE_TTL: 5 * 60 * 1000,
-  PRODUCTS_PER_PAGE: 20,
+  PRODUCTS_PER_PAGE: 40,
   CACHE_KEY_PRODUCTS: 'vestara_products_cache',
   CACHE_KEY_REVIEWS: 'vestara_reviews_cache'
 };
@@ -546,7 +546,7 @@ function displayProducts(containerSelector, productList, limit = null) {
   if (containerSelector === '#allProducts') {
     // PRODUCTS PAGE GRID VIEW
     html = toDisplay.map(p => {
-      const shortDesc = p.shortDescription ? `<p class="clean-short-desc">${escapeHtml(p.shortDescription)}</p>` : '';
+      const shortDesc = p.shortDescription ? `<p class="clean-short-desc" style="display:none;">${escapeHtml(p.shortDescription)}</p>` : '';
       
       // Sale badge with percentage
       let badgeHtml = '';
@@ -580,7 +580,7 @@ function displayProducts(containerSelector, productList, limit = null) {
             ${shortDesc}
             <div class="clean-price-box">${priceHtml}</div>
             <div class="star-rating-static">${generateStarRating(p.rating || 4.5)}</div>
-            <div class="color-dots"><div class="dot gold"></div><div class="dot silver"></div></div>
+            <div class="color-dots"  style="display:none;"><div class="dot gold"></div><div class="dot silver"></div></div>
           </div>
         </div>`;
     }).join('');
@@ -706,7 +706,7 @@ async function displayProductDetail() {
       <h1 class="product-name">${escapeHtml(product.name)} ${saleTag}</h1>
       ${priceHtml}
       <p class="product-short-description">${escapeHtml(product.shortDescription || product.description || '')}</p>
-      <div class="product-variant"><label>Color:</label><div class="variant-options"><span class="variant-option selected">Gold</span></div></div>
+      <div class="product-variant" style="display:none;"><label>Color:</label><div class="variant-options"><span class="variant-option selected">Gold</span></div></div>
       <div class="quantity-selector">
         <label>Quantity:</label>
         <div class="quantity-controls">
